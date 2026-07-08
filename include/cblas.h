@@ -32,7 +32,7 @@ extern "C" {
  */
 
 /* 
- * Routines with standard 4 prefixes (S, D, C, Z)
+ * Routines with standard 2 prefixes (S, D)
  */
 void cblas_sgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA,
                  const enum CBLAS_TRANSPOSE TransB, const int M, const int N,

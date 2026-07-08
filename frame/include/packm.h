@@ -22,6 +22,7 @@ void mublis_spackm(
   int m0, int k0, int mr_or_nr,
   mublis_trans_t trans,
   mublis_struc_t struc,
+  mublis_uplo_t uplo,
   mublis_packm_diag_t diag
 );
 
@@ -32,6 +33,7 @@ void mublis_dpackm(
   int m0, int k0, int mr_or_nr,
   mublis_trans_t trans,
   mublis_struc_t struc,
+  mublis_uplo_t uplo,
   mublis_packm_diag_t diag
 );
 

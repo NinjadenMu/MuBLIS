@@ -9,8 +9,7 @@ typedef enum {
 typedef enum {
   MYBLIS_LOWER = 0,
   MYBLIS_UPPER = 1,
-  MYBLIS_DENSE = 2
-} myblis_uplo_t;
+} mublis_uplo_t;
 
 typedef enum {
   MUBLIS_LEFT = 0,
