@@ -29,6 +29,11 @@ typedef struct {
   mublis_context_dt_t d;
 } mublis_context_t;
 
+/*
+ * Must be defined by user in config/<config_name>/context.c.
+ * MuBLIS calls this at runtime to get the hardware context used to dispatch 
+ * to optimized implementations for the hardware.
+ */
 const mublis_context_t mublis_get_context(void);
 
 #endif
