@@ -7,8 +7,8 @@ typedef enum {
 } mublis_trans_t;
 
 typedef enum {
-  MYBLIS_LOWER = 0,
-  MYBLIS_UPPER = 1,
+  MUBLIS_LOWER = 0,
+  MUBLIS_UPPER = 1,
 } mublis_uplo_t;
 
 typedef enum {

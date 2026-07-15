@@ -11,9 +11,7 @@ typedef struct freelist {
   struct freelist *next;
 } freelist_t;
 
-// Prevents multiple threads from trying to simultaneously initialize 
-// or destroy the pool
-static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t pool_lock = PTHREAD_MUTEX_INITIALIZER;
 static bool pool_initialized = false;
 
 static struct {
@@ -31,14 +29,11 @@ static struct {
 
   // Freelist nodes that have been consumed are cached here to be re-added to 
   // a freelist when blocks are checked back into the pool.
-  // This means `MUBLIS_POOL_CHECKIN` requires no dynamic memory allocation to 
+  // This means `mublis_pool_checkin` requires no dynamic memory allocation to 
   // add blocks back to a freelist.   
   // The block attribute of nodes cached here should be treated as garbage, 
   // and the next pointer is repurposed to point to the next empty node.
   freelist_t *empty_node_cache;
-  
-  // Guards freelist modifications
-  pthread_mutex_t alloc_lock;
 } pool;
 
 static void node_list_destroy(freelist_t *head) {
@@ -89,11 +84,6 @@ static int freelist_expand(mublis_pool_role_t role) {
 }
 
 static int mublis_pool_init_impl(const mublis_context_t *context) {
-  if (pthread_mutex_init(&(pool.alloc_lock), NULL)) {
-    fprintf(stderr, "Error: mutex initialization failed.\n");
-    return 1;
-  }
-
   pool.buf_bytes[MUBLIS_POOL_SA] = (size_t)context->s.mc * context->s.kc * sizeof(float);
   pool.buf_bytes[MUBLIS_POOL_SB] = (size_t)context->s.nc * context->s.kc * sizeof(float);
   pool.buf_bytes[MUBLIS_POOL_DA] = (size_t)context->d.mc * context->d.kc * sizeof(double);
@@ -109,9 +99,9 @@ static int mublis_pool_init_impl(const mublis_context_t *context) {
       freelist_expand(MUBLIS_POOL_DB)) {
     for (int r = 0; r < MUBLIS_POOL_NUM_ROLES; r++) {
       freelist_destroy(pool.freelists[r]);
+      pool.freelists[r] = NULL;
     }
 
-    pthread_mutex_destroy(&pool.alloc_lock);
     fprintf(stderr, "Error: pool allocation failed.\n");
     return 1;
   }
@@ -122,20 +112,20 @@ static int mublis_pool_init_impl(const mublis_context_t *context) {
 }
 
 int mublis_pool_init(const mublis_context_t *context) {
-  pthread_mutex_lock(&init_lock);
+  pthread_mutex_lock(&pool_lock);
 
   int error_code = 0;
   if (!pool_initialized) {
     error_code = mublis_pool_init_impl(context);
   }
 
-  pthread_mutex_unlock(&init_lock);
+  pthread_mutex_unlock(&pool_lock);
 
   return error_code;
 }
 
 void mublis_pool_destroy(void) {
-  pthread_mutex_lock(&init_lock);
+  pthread_mutex_lock(&pool_lock);
 
   if (pool_initialized) {
     for (int r = 0; r < MUBLIS_POOL_NUM_ROLES; r++) {
@@ -146,50 +136,57 @@ void mublis_pool_destroy(void) {
     node_list_destroy(pool.empty_node_cache);
     pool.empty_node_cache = NULL;
 
-    pthread_mutex_destroy(&pool.alloc_lock);
-
     pool_initialized = false;
   }
 
-  pthread_mutex_unlock(&init_lock);
+  pthread_mutex_unlock(&pool_lock);
 }
 
 int mublis_pool_checkout(mublis_pool_role_t role, mublis_pool_block_t *out) {
-  pthread_mutex_lock(&pool.alloc_lock);
+  pthread_mutex_lock(&pool_lock);
 
-  // allocate new blocks to fulfill request if all existing blocks are in use
-  if (!pool.freelists[role]) {
-    int error_code = freelist_expand(role);
-    if (error_code) {
-      pthread_mutex_unlock(&pool.alloc_lock);
-      return error_code;
+  int error_code = 0;
+  if (pool_initialized) {
+    // allocate new blocks to fulfill request if all existing blocks are in use
+    if (!pool.freelists[role]) {
+      error_code = freelist_expand(role);
+      if (error_code) {
+        pthread_mutex_unlock(&pool_lock);
+        return error_code;
+      }
+
+      // allocate more blocks next time if we run out again
+      pool.num_blocks_to_allocate[role] *= 2;
     }
 
-    // allocate more blocks next time if we run out again
-    pool.num_blocks_to_allocate[role] *= 2;
+    freelist_t *node = pool.freelists[role];
+    *out = node->block;
+    pool.freelists[role] = node->next;
+    node->next = pool.empty_node_cache;
+    pool.empty_node_cache = node;
+  }
+  else {
+    fprintf(stderr, "Error: pool not initialized.\n");
+    error_code = 1;
   }
 
-  freelist_t *node = pool.freelists[role];
-  *out = node->block;
-  pool.freelists[role] = node->next;
-  node->next = pool.empty_node_cache;
-  pool.empty_node_cache = node;
+  pthread_mutex_unlock(&pool_lock);
 
-  pthread_mutex_unlock(&pool.alloc_lock);
-
-  return 0;
+  return error_code;
 }
 
 void mublis_pool_checkin(mublis_pool_block_t block) {
-  pthread_mutex_lock(&pool.alloc_lock);
+  pthread_mutex_lock(&pool_lock);
 
-  assert(pool.empty_node_cache != NULL);
+  if (pool_initialized) {
+    assert(pool.empty_node_cache != NULL);
 
-  freelist_t *node = pool.empty_node_cache;
-  pool.empty_node_cache = node->next;
-  node->block = block;
-  node->next = pool.freelists[block.role];
-  pool.freelists[block.role] = node;
+    freelist_t *node = pool.empty_node_cache;
+    pool.empty_node_cache = node->next;
+    node->block = block;
+    node->next = pool.freelists[block.role];
+    pool.freelists[block.role] = node;
+  }
 
-  pthread_mutex_unlock(&pool.alloc_lock);
+  pthread_mutex_unlock(&pool_lock);
 }
