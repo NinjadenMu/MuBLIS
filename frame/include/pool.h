@@ -59,9 +59,11 @@ typedef struct {
   mublis_pool_role_t role;
 
   /**
-   * Prevents checked out blocks from being checked in to a pool that's 
-   * been destroyed and then reinitialized, since the new pool will have a 
-   * higher epoch
+   * Blocks must be checked into the same pool they were checked out from.
+   * 
+   * `epoch` prevents blocks from incorrectly being checked into a pool 
+   * that's been destroyed and then reinitialized, since the new pool will 
+   * have a different epoch value from the block.
    */
   int epoch;
 } mublis_pool_block_t;
@@ -73,7 +75,7 @@ typedef struct {
  * 
  * On success, the pool is ready for checkin/checkout.
  * 
- * Equivalent to a no-op of the pool is already initialized.
+ * Equivalent to a no-op if the pool is already initialized.
  */
 int mublis_pool_init(const mublis_context_t *context);
 
@@ -82,7 +84,7 @@ int mublis_pool_init(const mublis_context_t *context);
  * 
  * After being called, blocks allocated by the user are detached and must have 
  * their buffers freed manually.  The pool epoch is incremented when destroy 
- * is called to prevent blocks from being checked into a destroyed pool (even 
+ * is called to prevent blocks from being checked into the destroyed pool (even
  * if a new pool is initialized).
  * 
  * Checkin/checkout requests may fail if a destroy request is issued 
@@ -94,6 +96,8 @@ void mublis_pool_destroy(void);
 
 /**
  * @brief request memory for one BLAS/MuBLIS operation
+ * 
+ * Returns 0 on success, 1 otherwise.
  * 
  * Writes into block at `out` with buffers for packed A, packed B, and a 
  * temporary C tile.
@@ -109,9 +113,14 @@ int mublis_pool_checkout(
 /**
  * @brief Checks memory back into pool
  * 
+ * Returns 0 on success, 1 otherwise.
+ * 
  * Can only fail if the block's pool is destroyed by another thread before the 
  * checkin request is handled.  In this case, the buffers should be manually 
  * freed.
+ * 
+ * Note that if the block's pool was destroyed and another pool was 
+ * initialized, checkin would still fail.
  */
 int mublis_pool_checkin(mublis_pool_block_t block);
 
