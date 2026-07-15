@@ -35,7 +35,7 @@ typedef enum {
   // Use to request blocks for single precision operations
   MUBLIS_POOL_S = 0,
 
-  // Use to request blocks for single precision operations
+  // Use to request blocks for double precision operations
   MUBLIS_POOL_D,
 
   MUBLIS_POOL_NUM_ROLES
@@ -47,6 +47,9 @@ typedef enum {
  * 
  * These 3 buffers are grouped into a block, so routines simply request a 
  * block from the pool.
+ * 
+ * @warning Blocks from the pool should not be modified by the user between 
+ * checkin and checkout.
  */
 typedef struct {
   void *a_pack_buf;
@@ -54,6 +57,13 @@ typedef struct {
   void *c_buf;
 
   mublis_pool_role_t role;
+
+  /**
+   * Prevents checked out blocks from being checked in to a pool that's 
+   * been destroyed and then reinitialized, since the new pool will have a 
+   * higher epoch
+   */
+  int epoch;
 } mublis_pool_block_t;
 
 /**
@@ -63,8 +73,7 @@ typedef struct {
  * 
  * On success, the pool is ready for checkin/checkout.
  * 
- * Doesn't read the pool's state when called, so an existing pool should 
- * be destroyed to free resources before another init call.
+ * Equivalent to a no-op of the pool is already initialized.
  */
 int mublis_pool_init(const mublis_context_t *context);
 
@@ -72,11 +81,14 @@ int mublis_pool_init(const mublis_context_t *context);
  * @brief Frees resources used by memory pool
  * 
  * After being called, blocks allocated by the user are detached and must have 
- * their buffers freed manually (don't attempt to check them back in to the 
- * destroyed pool.)
+ * their buffers freed manually.  The pool epoch is incremented when destroy 
+ * is called to prevent blocks from being checked into a destroyed pool (even 
+ * if a new pool is initialized).
  * 
- * In-flight checkout requests may fail if a destroy request is issued 
+ * Checkin/checkout requests may fail if a destroy request is issued 
  * concurrently.
+ * 
+ * Equivalent to a no-op if the pool is uninitialized.
  */
 void mublis_pool_destroy(void);
 
@@ -97,8 +109,9 @@ int mublis_pool_checkout(
 /**
  * @brief Checks memory back into pool
  * 
- * Can only fail if the pool is destroyed by another thread concurrently 
- * to the checkin request.  In this case, the buffers should be manually freed.
+ * Can only fail if the block's pool is destroyed by another thread before the 
+ * checkin request is handled.  In this case, the buffers should be manually 
+ * freed.
  */
 int mublis_pool_checkin(mublis_pool_block_t block);
 

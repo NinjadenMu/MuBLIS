@@ -27,6 +27,8 @@ typedef struct freelist {
 
 static pthread_mutex_t pool_lock = PTHREAD_MUTEX_INITIALIZER;
 static bool pool_initialized = false;
+// The version of the pool, incremented each time it's destroyed
+static int pool_epoch = 0;
 
 static struct {
   /*
@@ -47,8 +49,10 @@ static struct {
   /*
    * Freelist nodes that have been consumed are cached here to be re-added to 
    * a freelist when blocks are checked back into the pool.
+   * 
    * This means `mublis_pool_checkin` requires no dynamic memory allocation to 
    * add blocks back to a freelist.   
+   * 
    * The block attribute of nodes cached here should be treated as garbage, 
    * and the next pointer is repurposed to point to the next empty node.
    */
@@ -126,6 +130,7 @@ static int freelist_expand(mublis_pool_role_t role) {
     node->block.b_pack_buf = NULL;
     node->block.c_buf = NULL;
     node->block.role = role;
+    node->block.epoch = pool_epoch;
 
     if (
       posix_memalign(
@@ -210,8 +215,8 @@ static int mublis_pool_init_impl(const mublis_context_t *context) {
     (size_t)context->d.mr * context->d.nr * sizeof(double);
 
   /*
-   * lists at init may contain garbage pointers
-   * which should not be freed again or expanded
+   * lists at init may contain garbage pointers which should not be freed 
+   * again or expanded
   */
   for (int role = 0; role < MUBLIS_POOL_NUM_ROLES; role++) {
     pool.freelists[role] = NULL;
@@ -258,15 +263,17 @@ void mublis_pool_destroy(void) {
   pthread_mutex_lock(&pool_lock);
 
   if (pool_initialized) {
-    for (int r = 0; r < MUBLIS_POOL_NUM_ROLES; r++) {
-      freelist_destroy(pool.freelists[r]);
-      pool.freelists[r] = NULL;
+    for (int role = 0; role < MUBLIS_POOL_NUM_ROLES; role++) {
+      freelist_destroy(pool.freelists[role]);
+      pool.freelists[role] = NULL;
     }
 
     node_list_destroy(pool.empty_node_cache);
     pool.empty_node_cache = NULL;
 
     pool_initialized = false;
+
+    pool_epoch += 1;
   }
 
   pthread_mutex_unlock(&pool_lock);
@@ -309,7 +316,7 @@ int mublis_pool_checkout(mublis_pool_role_t role, mublis_pool_block_t *out) {
 int mublis_pool_checkin(mublis_pool_block_t block) {
   pthread_mutex_lock(&pool_lock);
 
-  if (pool_initialized) {
+  if (pool_initialized && block.epoch == pool_epoch) {
     assert(pool.empty_node_cache != NULL);
 
     freelist_t *node = pool.empty_node_cache;
