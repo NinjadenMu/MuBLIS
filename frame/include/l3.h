@@ -2,7 +2,7 @@
 #define MUBLIS_L3_H
 
 #include "context.h"
-#include "packm.h"
+#include "l1m.h"
 #include "types.h"
 
 typedef enum {
@@ -23,6 +23,7 @@ typedef struct {
 
 typedef struct {
   mublis_packm_struc_t struc;
+  mublis_uplo_t uplo;
   mublis_packm_diag_t diag;
 } mublis_l3_operand_t;
 

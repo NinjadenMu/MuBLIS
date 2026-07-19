@@ -103,8 +103,7 @@ static void freelist_destroy(freelist_t *head) {
 /**
  * @brief allocates new blocks and prepends them to the freelist
  * @param role the role of the new blocks, used to index freelists
- * 
- * Returns 0 on success, 1 otherwise
+ * @return 0 on success, 1 otherwise
  * 
  * Allocates buffers for `pool.num_blocks_to_allocate[role]` new blocks, 
  * prepends new blocks into role's existing freelist.

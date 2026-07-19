@@ -1,5 +1,5 @@
-#ifndef MUBLIS_PACKM_H
-#define MUBLIS_PACKM_H
+#ifndef MUBLIS_1M_H
+#define MUBLIS_1M_H
 
 #include "types.h"
 
@@ -12,7 +12,7 @@ typedef enum {
 typedef enum {
   MUBLIS_PACKM_DIAG_NONUNIT = 0,
   MUBLIS_PACKM_DIAG_UNIT = 1,
-  MUBLIS_PACKM_DIAG_INVERT = 2,
+  MUBLIS_PACKM_DIAG_INVERT = 2
 } mublis_packm_diag_t;
 
 void mublis_spackm(
@@ -21,7 +21,7 @@ void mublis_spackm(
   int rs, int cs,
   int m0, int k0, int mr_or_nr,
   mublis_packm_struc_t struc,
-  mublis_l3_relation_t relation,
+  mublis_uplo_t uplo,
   mublis_packm_diag_t diag,
   int diagoff
 );
@@ -32,7 +32,7 @@ void mublis_dpackm(
   int rs, int cs,
   int m0, int k0, int mr_or_nr,
   mublis_packm_struc_t struc,
-  mublis_l3_relation_t relation,
+  mublis_uplo_t uplo,
   mublis_packm_diag_t diag,
   int diagoff
 );

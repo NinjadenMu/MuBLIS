@@ -29,11 +29,24 @@ typedef struct {
   mublis_context_dt_t d;
 } mublis_context_t;
 
-/*
- * Must be defined by user in config/<config_name>/context.c.
- * MuBLIS calls this at runtime to get the hardware context used to dispatch 
+/**
+ * @brief Gets context object for runtime hardware specialization
+ * @return 0 on success, nonzero integer otherwise.
+ * 
+ * Must be defined by user at compile-time in config/<config_name>/context.c.
+ * MuBLIS uses this at runtime to get the hardware context used to dispatch 
  * to optimized implementations for the hardware.
  */
-const mublis_context_t mublis_get_context(void);
+int mublis_get_context(mublis_context_t *context);
+
+/**
+ * @brief Gets and validates context using user provided `mublis_get_context`
+ * @return 1 if context values are invalid, otherwise, passes through the 
+ * return value of `mublis_get_context`
+ * 
+ * Calls on `mublis_get_context` defined by user, and checks if values are 
+ * valid.
+ */
+int mublis_get_safe_context(mublis_context_t *context);
 
 #endif

@@ -1,9 +1,12 @@
 #include "stdbool.h"
+#include "stdlib.h"
 
 #include "kernels.h"
+#include "l1m.h"
 #include "l3.h"
-#include "packm.h"
+#include "l3_utils.h"
 #include "pool.h"
+#include "types.h"
 
 static inline bool relation_holds(mublis_l3_relation_t relation, int lhs, int rhs) {
   switch (relation) {
@@ -33,14 +36,31 @@ static bool block_is_outside(
   }
 }
 
-static inline mublis_l3_relation_t flip_relation(mublis_l3_relation_t relation) {
+static bool block_is_inside(
+  mublis_l3_relation_t relation,
+  int lhs0, int lhs_len,
+  int rhs0, int rhs_len
+) {
   switch (relation) {
     case MUBLIS_L3_ALL:
-      return MUBLIS_L3_ALL;
+      return true;
+    
     case MUBLIS_L3_LOWER:
-      return MUBLIS_L3_UPPER;
+      return lhs0 + lhs_len <= rhs0;
+
     case MUBLIS_L3_UPPER:
-      return MUBLIS_L3_LOWER;
+      return lhs0 >= rhs0 + rhs_len;
+  }
+}
+
+static inline mublis_uplo_t flip_uplo(mublis_uplo_t uplo) {
+  switch (uplo) {
+    case MUBLIS_DENSE:
+      return MUBLIS_DENSE;
+    case MUBLIS_UPPER:
+      return MUBLIS_LOWER;
+    case MUBLIS_LOWER:
+      return MUBLIS_UPPER;
   }
 }
 
@@ -72,6 +92,13 @@ int mublis_l3_sdriver(
 
   mublis_l3_domain_t domain = product->domain;
 
+  mublis_pool_block_t pool_block;
+  if (error_code = mublis_pool_checkout(MUBLIS_POOL_S, &pool_block))
+    return error_code;
+  float *a_pack_buf = pool_block.a_pack_buf;
+  float *b_pack_buf = pool_block.b_pack_buf;
+  float *c_buf = pool_block.c_buf;
+
   for (int jc = 0; jc < n; jc += nc) {
     int j_max = jc + nc < n ? jc + nc : n;
     for (int ic = 0; ic < m; ic += mc) {
@@ -92,29 +119,24 @@ int mublis_l3_sdriver(
     }
   }
 
-  mublis_pool_block_t pool_block_a;
-  mublis_pool_block_t pool_block_b;
-  if (error_code = mublis_pool_checkout(MUBLIS_POOL_SA, &pool_block_a))
-    return error_code;
-  if (error_code = mublis_pool_checkout(MUBLIS_POOL_SB, &pool_block_b)) {
-    mublis_pool_checkin(pool_block_a);
-    return error_code;
+  if (alpha == 0) {
+    goto exit;
   }
 
   for (int jc = 0; jc < n; jc += nc) {
     int j_max = jc + nc < n ? jc + nc : n;
     for (int pc = 0; pc < k; pc += kc) {
-      int p_max = pc + kc < k ? pc + kc : n;
+      int p_max = pc + kc < k ? pc + kc : k;
       if (block_is_outside(domain.jp, jc, j_max - jc, pc, p_max - pc))
         continue;
 
       mublis_spackm(
-        pool_block_b.buf, 
+        b_pack_buf, 
         &b[pc * rs_b + jc * cs_b],
         cs_b, rs_b,
         j_max - jc, p_max - pc, nr,
         product->b.struc,
-        domain.jp,
+        flip_uplo(product->b.uplo),
         product->b.diag,
         jc - pc
       );
@@ -126,12 +148,12 @@ int mublis_l3_sdriver(
             continue;
 
         mublis_spackm(
-          pool_block_a.buf, 
+          a_pack_buf, 
           &a[ic * rs_a + pc * cs_a],
           rs_a, cs_a,
           i_max - ic, p_max - pc, mr,
           product->a.struc,
-          flip_relation(domain.pi),
+          product->a.uplo,
           product->a.diag,
           ic - pc
         );
@@ -147,12 +169,13 @@ int mublis_l3_sdriver(
             if (block_is_outside(domain.pi, pc, p_max - pc, ir, mr))
               continue;
 
-            if (ir + mr <= i_max && jr + nr <= j_max) {
+            if (block_is_inside(domain.ji, jr, nr, ir, mr) &&
+                ir + mr <= i_max && jr + nr <= j_max) {
               ((mublis_sgemm_ukr_ft) context->s.gemm_ukr)(
                 p_max - pc,
                 alpha,
-                &pool_block_a.buf[(ir - ic) * (p_max - pc)],
-                &pool_block_b.buf[(jr - jc) * (p_max - pc)],
+                &a_pack_buf[(ir - ic) * (p_max - pc)],
+                &b_pack_buf[(jr - jc) * (p_max - pc)],
                 1.0f,
                 &c[ir * rs_c + jr * cs_c],
                 rs_c, cs_c,
@@ -160,7 +183,23 @@ int mublis_l3_sdriver(
               );
             }
             else {
-              // TODO: write to temp, then do a masked write to C
+              ((mublis_sgemm_ukr_ft) context->s.gemm_ukr)(
+                p_max - pc,
+                alpha,
+                &a_pack_buf[(ir - ic) * (p_max - pc)],
+                &b_pack_buf[(jr - jc) * (p_max - pc)],
+                0.0f,
+                c_buf,
+                1, mr,
+                NULL // TODO: pass pointers for prefetching
+              );
+
+              for (int j = jr; j < MIN(jr + nr, j_max); j++) {
+                for (int i = ir; i < MIN(ir + mr, i_max); i++) {
+                  if (relation_holds(domain.ji, j, i))
+                    c[i * rs_c + j * cs_c] += c_buf[(i - ir) + (j - jr) * mr];
+                }
+              }
             }
           }
         }
@@ -168,7 +207,12 @@ int mublis_l3_sdriver(
     }
   }
 
-  mublis_pool_checkin(pool_block_a);
-  mublis_pool_checkin(pool_block_b);
+exit:
+  if (mublis_pool_checkin(pool_block)) {
+    free(a_pack_buf);
+    free(b_pack_buf);
+    free(c_buf);
+  }
+    
   return 0;
 }

@@ -70,8 +70,7 @@ typedef struct {
 
 /**
  * @brief Initializes memory pool
- *
- * Returns 0 on success, 1 otherwise.
+ * @return 0 on success, 1 otherwise.
  * 
  * On success, the pool is ready for checkin/checkout.
  * 
@@ -96,8 +95,7 @@ void mublis_pool_destroy(void);
 
 /**
  * @brief request memory for one BLAS/MuBLIS operation
- * 
- * Returns 0 on success, 1 otherwise.
+ * @return 0 on success, 1 otherwise.
  * 
  * Writes into block at `out` with buffers for packed A, packed B, and a 
  * temporary C tile.
@@ -112,8 +110,7 @@ int mublis_pool_checkout(
 
 /**
  * @brief Checks memory back into pool
- * 
- * Returns 0 on success, 1 otherwise.
+ * @return 0 on success, 1 otherwise.
  * 
  * Can only fail if the block's pool is destroyed by another thread before the 
  * checkin request is handled.  In this case, the buffers should be manually 
