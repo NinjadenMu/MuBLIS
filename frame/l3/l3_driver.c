@@ -4,9 +4,10 @@
 #include "kernels.h"
 #include "l1m.h"
 #include "l3.h"
-#include "l3_utils.h"
 #include "pool.h"
 #include "types.h"
+
+#define MIN(x, y) (((x) <= (y)) ? (x) : (y))
 
 static inline bool relation_holds(mublis_l3_relation_t relation, int lhs, int rhs) {
   switch (relation) {
