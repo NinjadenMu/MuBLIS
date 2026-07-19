@@ -54,6 +54,44 @@ static bool block_is_inside(
   }
 }
 
+static int first_update_pc(
+  mublis_l3_domain_t domain,
+  int jr, int ir,
+  int kc
+) {
+  int first_p = 0;
+
+  if (domain.jp == MUBLIS_L3_LOWER)
+    first_p = jr;
+
+  if (domain.pi == MUBLIS_L3_UPPER && ir > first_p)
+    first_p = ir;
+
+  return first_p - first_p % kc;
+}
+
+static bool block_has_update(
+  mublis_l3_domain_t domain,
+  int jr, int ir,
+  int nr, int mr,
+  int k, int kc
+) {
+  int pc = first_update_pc(domain, jr, ir, kc);
+
+  if (pc >= k)
+    return false;
+
+  int p_max = pc + kc < k ? pc + kc : k;
+
+  if (block_is_outside(domain.jp, jr, nr, pc, p_max - pc))
+    return false;
+
+  if (block_is_outside(domain.pi, pc, p_max - pc, ir, mr))
+    return false;
+
+  return true;
+}
+
 static inline mublis_uplo_t flip_uplo(mublis_uplo_t uplo) {
   switch (uplo) {
     case MUBLIS_DENSE:
@@ -107,13 +145,27 @@ int mublis_l3_sdriver(
       if (block_is_outside(domain.ji, jc, j_max - jc, ic, i_max - ic))
         continue;
 
-      for (int j = jc; j < j_max; j++) {
-        for (int i = ic; i < i_max; i++) {
-          if (relation_holds(domain.ji, j, i)) {
-            if (beta == 0)
-              c[i * rs_c + j * cs_c] = 0.0f;
-            else
-              c[i * rs_c + j * cs_c] *= beta;
+      for (int jr = jc; jr < j_max; jr += nr) {
+        if (block_is_outside(domain.ji, jr, nr, ic, i_max - ic))
+          continue;
+
+        for (int ir = ic; ir < i_max; ir += mr) {
+          if (block_is_outside(domain.ji, jr, nr, ir, mr))
+            continue;
+
+          if (alpha != 0 &&
+              block_has_update(domain, jr, ir, nr, mr, k, kc))
+            continue;
+
+          for (int j = jr; j < MIN(jr + nr, j_max); j++) {
+            for (int i = ir; i < MIN(ir + mr, i_max); i++) {
+              if (relation_holds(domain.ji, j, i)) {
+                if (beta == 0)
+                  c[i * rs_c + j * cs_c] = 0.0f;
+                else
+                  c[i * rs_c + j * cs_c] *= beta;
+              }
+            }
           }
         }
       }
@@ -146,7 +198,7 @@ int mublis_l3_sdriver(
         if (block_is_outside(domain.ji, jc, j_max - jc, ic, i_max - ic))
           continue;
         if (block_is_outside(domain.pi, pc, p_max - pc, ic, i_max - ic))
-            continue;
+          continue;
 
         mublis_spackm(
           a_pack_buf, 
@@ -170,6 +222,9 @@ int mublis_l3_sdriver(
             if (block_is_outside(domain.pi, pc, p_max - pc, ir, mr))
               continue;
 
+            bool first_update =
+              pc == first_update_pc(domain, jr, ir, kc);
+
             if (block_is_inside(domain.ji, jr, nr, ir, mr) &&
                 ir + mr <= i_max && jr + nr <= j_max) {
               ((mublis_sgemm_ukr_ft) context->s.gemm_ukr)(
@@ -177,7 +232,7 @@ int mublis_l3_sdriver(
                 alpha,
                 &a_pack_buf[(ir - ic) * (p_max - pc)],
                 &b_pack_buf[(jr - jc) * (p_max - pc)],
-                1.0f,
+                first_update ? beta : 1.0f,
                 &c[ir * rs_c + jr * cs_c],
                 rs_c, cs_c,
                 NULL // TODO: pass pointers for prefetching
@@ -197,8 +252,20 @@ int mublis_l3_sdriver(
 
               for (int j = jr; j < MIN(jr + nr, j_max); j++) {
                 for (int i = ir; i < MIN(ir + mr, i_max); i++) {
-                  if (relation_holds(domain.ji, j, i))
-                    c[i * rs_c + j * cs_c] += c_buf[(i - ir) + (j - jr) * mr];
+                  if (relation_holds(domain.ji, j, i)) {
+                    float *cij = &c[i * rs_c + j * cs_c];
+                    float value = c_buf[(i - ir) + (j - jr) * mr];
+
+                    if (first_update) {
+                      if (beta == 0)
+                        *cij = value;
+                      else
+                        *cij = beta * *cij + value;
+                    }
+                    else {
+                      *cij += value;
+                    }
+                  }
                 }
               }
             }
