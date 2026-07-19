@@ -42,7 +42,7 @@ typedef void (*mublis_dgemm_ukr_ft)(
     const mublis_auxinfo_t *aux           \
   );
 
-MUBLIS_GEMM_UKR_PROT(float, mublis_sgemm_ukr_ref)
-MUBLIS_GEMM_UKR_PROT(double, mublis_dgemm_ukr_ref)
+MUBLIS_GEMM_UKR_PROT(float, mublis_sgemm_ukr_reference)
+MUBLIS_GEMM_UKR_PROT(double, mublis_dgemm_ukr_reference)
 
 #endif

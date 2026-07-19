@@ -46,7 +46,10 @@ int mublis_get_context(mublis_context_t *context);
  * 
  * Calls on `mublis_get_context` defined by user, and checks if values are 
  * valid.
+ * 
+ * Creates a guarded persistent context object, so repeated calls (including  
+ * from different threads) only need to use `mublis_get_context` once.
  */
-int mublis_get_safe_context(mublis_context_t *context);
+int mublis_get_safe_context(const mublis_context_t **context);
 
 #endif
