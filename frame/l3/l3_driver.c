@@ -105,8 +105,8 @@ static inline mublis_uplo_t flip_uplo(mublis_uplo_t uplo) {
 int mublis_l3_sdriver(
   int m, int n, int k,
   float alpha,
-  const float *a, int rs_a, int cs_a,
-  const float *b, int rs_b, int cs_b,
+  const float *restrict a, int rs_a, int cs_a,
+  const float *restrict b, int rs_b, int cs_b,
   float beta,
   float *c, int rs_c, int cs_c,
   const mublis_l3_product_t *product

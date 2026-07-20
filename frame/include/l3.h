@@ -36,8 +36,8 @@ typedef struct {
 int mublis_l3_sdriver(
   int m, int n, int k,
   float alpha,
-  const float *a, int rs_a, int cs_a,
-  const float *b, int rs_b, int cs_b,
+  const float *restrict a, int rs_a, int cs_a,
+  const float *restrict b, int rs_b, int cs_b,
   float beta,
   float *c, int rs_c, int cs_c,
   const mublis_l3_product_t *ctl
@@ -46,8 +46,8 @@ int mublis_l3_sdriver(
 int mublis_l3_ddriver(
   int m, int n, int k,
   double alpha,
-  const double *a, int rs_a, int cs_a,
-  const double *b, int rs_b, int cs_b,
+  const double *restrict a, int rs_a, int cs_a,
+  const double *restrict b, int rs_b, int cs_b,
   double beta,
   double *c, int rs_c, int cs_c,
   const mublis_l3_product_t *ctl

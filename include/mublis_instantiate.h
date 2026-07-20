@@ -9,10 +9,10 @@ typedef struct {
 typedef void (*mublis_sgemm_ukr_ft)(
   int k,
   float alpha,
-  const float *a,
-  const float *b,
+  const float *restrict a,
+  const float *restrict b,
   const float beta,
-  float *c,
+  float *restrict c,
   int rs_c, int cs_c,
   const mublis_auxinfo_t *aux
 );
@@ -20,10 +20,10 @@ typedef void (*mublis_sgemm_ukr_ft)(
 typedef void (*mublis_dgemm_ukr_ft)(
   int k,
   double alpha,
-  const double *a,
-  const double *b,
+  const double *restrict a,
+  const double *restrict b,
   const double beta,
-  double *c,
+  double *restrict c,
   int rs_c, int cs_c,
   const mublis_auxinfo_t *aux
 );
@@ -70,10 +70,10 @@ typedef struct {
   void name(                                    \
     int k,                                      \
     ctype alpha,                                \
-    const ctype *a,                             \
-    const ctype *b,                             \
+    const ctype *restrict a,                    \
+    const ctype *restrict b,                    \
     ctype beta,                                 \
-    ctype *c,                                   \
+    ctype *restrict c,                          \
     int rs_c, int cs_c,                         \
     const mublis_auxinfo_t *aux                 \
   );

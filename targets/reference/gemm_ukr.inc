@@ -9,10 +9,10 @@
   static void name(                                                            \
     int k,                                                                     \
     ctype alpha,                                                               \
-    const ctype *a,                                                            \
-    const ctype *b,                                                            \
+    const ctype *restrict a,                                                   \
+    const ctype *restrict b,                                                   \
     ctype beta,                                                                \
-    ctype *c,                                                                  \
+    ctype *restrict c,                                                         \
     int rs_c, int cs_c,                                                        \
     const mublis_auxinfo_t *aux                                                \
   ) {                                                                          \
