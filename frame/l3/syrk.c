@@ -1,32 +1,31 @@
 #include "l3.h"
 #include "types.h"
 
-#define MUBLIS_GEMM_IMPL(ctype, function_name, driver_name)                    \
-  int function_name(                                                           \
-    mublis_trans_t trans_a, mublis_trans_t trans_b,                            \
-    int m, int n, int k,                                                       \
+#define MUBLIS_SYRK_IMPL(ctype, function_name, driver_name)                    \
+  int function_name(                                                          \
+    mublis_uplo_t uplo, mublis_trans_t trans,                                 \
+    int n, int k,                                                              \
     ctype alpha,                                                               \
-    const ctype *a, int rs_a, int cs_a,                                        \
-    const ctype *b, int rs_b, int cs_b,                                        \
+    const ctype *a, int rs_a, int cs_a,                                       \
     ctype beta,                                                                \
-    ctype *c, int rs_c, int cs_c                                               \
+    ctype *c, int rs_c, int cs_c                                              \
   ) {                                                                          \
-    if (trans_a == MUBLIS_TRANSPOSE) {                                         \
+    if (trans == MUBLIS_TRANSPOSE) {                                           \
       int tmp = rs_a;                                                          \
       rs_a = cs_a;                                                             \
       cs_a = tmp;                                                              \
     }                                                                          \
                                                                                \
-    if (trans_b == MUBLIS_TRANSPOSE) {                                         \
-      int tmp = rs_b;                                                          \
-      rs_b = cs_b;                                                             \
-      cs_b = tmp;                                                              \
-    }                                                                          \
+    mublis_l3_relation_t ji = MUBLIS_L3_ALL;                                   \
+    if (uplo == MUBLIS_LOWER)                                                  \
+      ji = MUBLIS_L3_LOWER;                                                    \
+    else if (uplo == MUBLIS_UPPER)                                             \
+      ji = MUBLIS_L3_UPPER;                                                    \
                                                                                \
     const mublis_l3_product_t product = {                                      \
       .domain = {                                                              \
         .jp = MUBLIS_L3_ALL,                                                   \
-        .ji = MUBLIS_L3_ALL,                                                   \
+        .ji = ji,                                                              \
         .pi = MUBLIS_L3_ALL                                                    \
       },                                                                       \
       .a = {                                                                   \
@@ -42,17 +41,17 @@
     };                                                                         \
                                                                                \
     return driver_name(                                                        \
-      m, n, k,                                                                 \
+      n, n, k,                                                                 \
       alpha,                                                                   \
       a, rs_a, cs_a,                                                           \
-      b, rs_b, cs_b,                                                           \
+      a, cs_a, rs_a,                                                           \
       beta,                                                                    \
       c, rs_c, cs_c,                                                           \
       &product                                                                 \
     );                                                                         \
   }
 
-MUBLIS_GEMM_IMPL(float, mublis_sgemm, mublis_l3_sdriver)
-MUBLIS_GEMM_IMPL(double, mublis_dgemm, mublis_l3_ddriver)
+MUBLIS_SYRK_IMPL(float, mublis_ssyrk, mublis_l3_sdriver)
+MUBLIS_SYRK_IMPL(double, mublis_dsyrk, mublis_l3_ddriver)
 
-#undef MUBLIS_GEMM_IMPL
+#undef MUBLIS_SYRK_IMPL
