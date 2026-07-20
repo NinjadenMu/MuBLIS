@@ -1,10 +1,12 @@
 #ifndef MUBLIS_CONTEXT_H
 #define MUBLIS_CONTEXT_H
 
+#include "kernels.h"
+
 /**
  * @brief hardware context for either single or double precision datatype
  * 
- * Contains void* pointer to micro-kernel function and register and cache 
+ * Contains pointer to micro-kernel function and register and cache 
  * block dimensions.
  * 
  * Context is separated by precision because double precision block dimensions 
@@ -13,11 +15,18 @@
  */
 typedef struct {
   // ukr = micro-kernel, with the mu symbol collapsing to a u
-  void *gemm_ukr; // cast to mublis_{s, d}gemm_ukr_ft
+  mublis_sgemm_ukr_ft gemm_ukr;
 
   int mr, nr;
   int mc, kc, nc;
-} mublis_context_dt_t;
+} mublis_scontext_t;
+typedef struct {
+  // ukr = micro-kernel, with the mu symbol collapsing to a u
+  mublis_dgemm_ukr_ft gemm_ukr;
+
+  int mr, nr;
+  int mc, kc, nc;
+} mublis_dcontext_t;
 
 /**
  * @brief full hardware context
@@ -25,8 +34,8 @@ typedef struct {
  * Contains a context object for single and double precision.
  */
 typedef struct {
-  mublis_context_dt_t s;
-  mublis_context_dt_t d;
+  mublis_scontext_t s;
+  mublis_dcontext_t d;
 } mublis_context_t;
 
 /**

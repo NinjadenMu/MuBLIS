@@ -16,7 +16,7 @@ static inline int mublis_packm_is_stored(mublis_uplo_t uplo, int diagoff) {
 }
 
 #define MUBLIS_PACKM_IMPL(ctype, function_name)                                \
-  void function(                                                               \
+  void function_name(                                                          \
     ctype *restrict dst,                                                       \
     const ctype *restrict src,                                                 \
     int rs, int cs,                                                            \

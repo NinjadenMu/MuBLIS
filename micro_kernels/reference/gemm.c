@@ -4,8 +4,8 @@
  * These dimensions must match mr and nr in every context that selects the
  * corresponding reference kernel.
  */
-#define SGEMM_MR 4
-#define SGEMM_NR 4
+#define SGEMM_MR 8
+#define SGEMM_NR 8
 #define DGEMM_MR 4
 #define DGEMM_NR 4
 

@@ -1,18 +1,47 @@
-#ifndef MUBLIS_L3_H
-#define MUBLIS_L3_H
+#ifndef MUBLIS_H
+#define MUBLIS_H
 
-#include "context.h"
-#include "l1m.h"
-#include "types.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef enum {
+  MUBLIS_NO_TRANSPOSE = 0,
+  MUBLIS_TRANSPOSE = 1
+} mublis_trans_t;
+
+typedef enum {
+  MUBLIS_DENSE = 0,
+  MUBLIS_LOWER = 1,
+  MUBLIS_UPPER = 2
+} mublis_uplo_t;
+
+typedef enum {
+  MUBLIS_LEFT = 0,
+  MUBLIS_RIGHT = 1
+} mublis_side_t;
+
+typedef enum {
+  MUBLIS_NON_UNIT_DIAG = 0,
+  MUBLIS_UNIT_DIAG = 1
+} mublis_diag_t;
+
+typedef enum {
+  MUBLIS_STRUC_GENERAL = 0,
+  MUBLIS_STRUC_SYMMETRIC = 1,
+  MUBLIS_STRUC_TRIANGULAR = 2
+} mublis_packm_struc_t;
+
+typedef enum {
+  MUBLIS_PACKM_DIAG_NONUNIT = 0,
+  MUBLIS_PACKM_DIAG_UNIT = 1,
+  MUBLIS_PACKM_DIAG_INVERT = 2
+} mublis_packm_diag_t;
 
 typedef enum {
   MUBLIS_L3_ALL = 0,
-
-  // left index <= right index
   MUBLIS_L3_LOWER = 1,
-
-  // left index >= right index
-  MUBLIS_L3_UPPER = 2,
+  MUBLIS_L3_UPPER = 2
 } mublis_l3_relation_t;
 
 typedef struct {
@@ -29,7 +58,6 @@ typedef struct {
 
 typedef struct {
   mublis_l3_domain_t domain;
-
   mublis_l3_operand_t a;
   mublis_l3_operand_t b;
 } mublis_l3_product_t;
@@ -41,7 +69,7 @@ int mublis_l3_sdriver(
   const float *b, int rs_b, int cs_b,
   float beta,
   float *c, int rs_c, int cs_c,
-  const mublis_l3_product_t *ctl
+  const mublis_l3_product_t *product
 );
 
 int mublis_l3_ddriver(
@@ -51,11 +79,11 @@ int mublis_l3_ddriver(
   const double *b, int rs_b, int cs_b,
   double beta,
   double *c, int rs_c, int cs_c,
-  const mublis_l3_product_t *ctl
+  const mublis_l3_product_t *product
 );
 
 int mublis_sgemm(
-  mublis_trans_t trans_a, mublis_trans_t trans_b, 
+  mublis_trans_t trans_a, mublis_trans_t trans_b,
   int m, int n, int k,
   float alpha,
   const float *a, int rs_a, int cs_a,
@@ -63,6 +91,7 @@ int mublis_sgemm(
   float beta,
   float *c, int rs_c, int cs_c
 );
+
 int mublis_ssymm(
   mublis_side_t side, mublis_uplo_t uplo,
   int m, int n,
@@ -72,6 +101,7 @@ int mublis_ssymm(
   float beta,
   float *c, int rs_c, int cs_c
 );
+
 int mublis_ssyrk(
   mublis_uplo_t uplo, mublis_trans_t trans,
   int n, int k,
@@ -80,6 +110,7 @@ int mublis_ssyrk(
   float beta,
   float *c, int rs_c, int cs_c
 );
+
 int mublis_ssyr2k(
   mublis_uplo_t uplo, mublis_trans_t trans,
   int n, int k,
@@ -89,6 +120,7 @@ int mublis_ssyr2k(
   float beta,
   float *c, int rs_c, int cs_c
 );
+
 int mublis_strmm(
   mublis_side_t side, mublis_uplo_t uplo,
   mublis_trans_t trans_a, mublis_diag_t diag,
@@ -97,6 +129,7 @@ int mublis_strmm(
   const float *a, int rs_a, int cs_a,
   float *b, int rs_b, int cs_b
 );
+
 int mublis_strsm(
   mublis_side_t side, mublis_uplo_t uplo,
   mublis_trans_t trans_a, mublis_diag_t diag,
@@ -107,7 +140,7 @@ int mublis_strsm(
 );
 
 int mublis_dgemm(
-  mublis_trans_t trans_a, mublis_trans_t trans_b, 
+  mublis_trans_t trans_a, mublis_trans_t trans_b,
   int m, int n, int k,
   double alpha,
   const double *a, int rs_a, int cs_a,
@@ -115,6 +148,7 @@ int mublis_dgemm(
   double beta,
   double *c, int rs_c, int cs_c
 );
+
 int mublis_dsymm(
   mublis_side_t side, mublis_uplo_t uplo,
   int m, int n,
@@ -124,6 +158,7 @@ int mublis_dsymm(
   double beta,
   double *c, int rs_c, int cs_c
 );
+
 int mublis_dsyrk(
   mublis_uplo_t uplo, mublis_trans_t trans,
   int n, int k,
@@ -132,6 +167,7 @@ int mublis_dsyrk(
   double beta,
   double *c, int rs_c, int cs_c
 );
+
 int mublis_dsyr2k(
   mublis_uplo_t uplo, mublis_trans_t trans,
   int n, int k,
@@ -141,6 +177,7 @@ int mublis_dsyr2k(
   double beta,
   double *c, int rs_c, int cs_c
 );
+
 int mublis_dtrmm(
   mublis_side_t side, mublis_uplo_t uplo,
   mublis_trans_t trans_a, mublis_diag_t diag,
@@ -149,6 +186,7 @@ int mublis_dtrmm(
   const double *a, int rs_a, int cs_a,
   double *b, int rs_b, int cs_b
 );
+
 int mublis_dtrsm(
   mublis_side_t side, mublis_uplo_t uplo,
   mublis_trans_t trans_a, mublis_diag_t diag,
@@ -157,5 +195,9 @@ int mublis_dtrsm(
   const double *a, int rs_a, int cs_a,
   double *b, int rs_b, int cs_b
 );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

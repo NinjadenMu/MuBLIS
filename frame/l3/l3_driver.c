@@ -47,10 +47,10 @@ static bool block_is_inside(
       return true;
     
     case MUBLIS_L3_LOWER:
-      return lhs0 + lhs_len <= rhs0;
+      return lhs0 + lhs_len - 1 <= rhs0;
 
     case MUBLIS_L3_UPPER:
-      return lhs0 >= rhs0 + rhs_len;
+      return lhs0 >= rhs0 + rhs_len - 1;
   }
 }
 
@@ -110,14 +110,17 @@ int mublis_l3_sdriver(
   const float *b, int rs_b, int cs_b,
   float beta,
   float *c, int rs_c, int cs_c,
-  const mublis_l3_product_t *product,
-  const mublis_context_t *context
+  const mublis_l3_product_t *product
 ) {
   if (m == 0 || n == 0) {
     return 0;
   }
 
   int error_code;
+  const mublis_context_t *context;
+  if (error_code = mublis_get_safe_context(&context))
+    return error_code;
+
   // Once the pool is initialized, this is a no-op
   if (error_code = mublis_pool_init(context)) {
     return error_code;
@@ -227,7 +230,7 @@ int mublis_l3_sdriver(
 
             if (block_is_inside(domain.ji, jr, nr, ir, mr) &&
                 ir + mr <= i_max && jr + nr <= j_max) {
-              ((mublis_sgemm_ukr_ft) context->s.gemm_ukr)(
+              (context->s.gemm_ukr)(
                 p_max - pc,
                 alpha,
                 &a_pack_buf[(ir - ic) * (p_max - pc)],
@@ -239,7 +242,7 @@ int mublis_l3_sdriver(
               );
             }
             else {
-              ((mublis_sgemm_ukr_ft) context->s.gemm_ukr)(
+              (context->s.gemm_ukr)(
                 p_max - pc,
                 alpha,
                 &a_pack_buf[(ir - ic) * (p_max - pc)],
