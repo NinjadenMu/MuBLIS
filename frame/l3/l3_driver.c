@@ -1,7 +1,6 @@
 #include "stdbool.h"
 #include "stdlib.h"
 
-#include "kernels.h"
 #include "l1m.h"
 #include "l3.h"
 #include "pool.h"

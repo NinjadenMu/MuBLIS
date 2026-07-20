@@ -1,16 +1,12 @@
-#include "kernels.h"
+#include "mublis_instantiate.h"
 
-/*
- * These dimensions must match mr and nr in every context that selects the
- * corresponding reference kernel.
- */
-#define SGEMM_MR 8
-#define SGEMM_NR 8
-#define DGEMM_MR 4
-#define DGEMM_NR 4
+#define S_MR 8
+#define S_NR 8
+#define D_MR 4
+#define D_NR 4
 
 #define MUBLIS_GEMM_UKR_REFERENCE_IMPL(ctype, name, mr, nr)                    \
-  void name(                                                                   \
+  static void name(                                                            \
     int k,                                                                     \
     ctype alpha,                                                               \
     const ctype *a,                                                            \
@@ -56,10 +52,9 @@
     }                                                                          \
   }
 
-MUBLIS_GEMM_UKR_REFERENCE_IMPL(float, mublis_sgemm_ukr_reference, SGEMM_MR,
-                               SGEMM_NR)
-
-MUBLIS_GEMM_UKR_REFERENCE_IMPL(double, mublis_dgemm_ukr_reference, DGEMM_MR,
-                               DGEMM_NR)
+MUBLIS_GEMM_UKR_REFERENCE_IMPL(float, mublis_sgemm_ukr_reference, S_MR,
+                               S_NR)
+MUBLIS_GEMM_UKR_REFERENCE_IMPL(double, mublis_dgemm_ukr_reference, D_MR,
+                               D_NR)
 
 #undef MUBLIS_GEMM_UKR_REFERENCE_IMPL

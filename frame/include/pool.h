@@ -18,7 +18,7 @@
 #ifndef MUBLIS_POOL_H
 #define MUBLIS_POOL_H
 
-#include "context.h"
+#include "safe_dispatch.h"
 
 /*
  * Maximum expected number of threads expected to be concurrently making 
