@@ -58,5 +58,3 @@
 
 MUBLIS_SYMM_IMPL(float, mublis_ssymm, mublis_l3_sdriver)
 MUBLIS_SYMM_IMPL(double, mublis_dsymm, mublis_l3_ddriver)
-
-#undef MUBLIS_SYMM_IMPL

@@ -174,27 +174,6 @@ static int freelist_expand(mublis_pool_role_t role) {
  * See `mublis_pool_init` header for more info.
  */
 static int mublis_pool_init_impl(const mublis_context_t *context) {
-  /*
-   * Because packing pads to the nearest micro-tile size, mc and mr (which are 
-   * the panel size) must be multiples of mr and nr
-   */
-  assert(
-    context->s.mr > 0 &&
-    context->s.mc % context->s.mr == 0
-  );
-  assert(
-    context->s.nr > 0 &&
-    context->s.nc % context->s.nr == 0
-  );
-  assert(
-    context->d.mr > 0 &&
-    context->d.mc % context->d.mr == 0
-  );
-  assert(
-    context->d.nr > 0 &&
-    context->d.nc % context->d.nr == 0
-  );
-
   pool.a_pack_buf_bytes[MUBLIS_POOL_S] =
     (size_t)context->s.mc * context->s.kc * sizeof(float);
 

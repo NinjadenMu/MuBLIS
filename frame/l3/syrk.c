@@ -53,5 +53,3 @@
 
 MUBLIS_SYRK_IMPL(float, mublis_ssyrk, mublis_l3_sdriver)
 MUBLIS_SYRK_IMPL(double, mublis_dsyrk, mublis_l3_ddriver)
-
-#undef MUBLIS_SYRK_IMPL

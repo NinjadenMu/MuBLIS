@@ -70,5 +70,3 @@
 
 MUBLIS_SYR2K_IMPL(float, mublis_ssyr2k, mublis_l3_sdriver)
 MUBLIS_SYR2K_IMPL(double, mublis_dsyr2k, mublis_l3_ddriver)
-
-#undef MUBLIS_SYR2K_IMPL

@@ -3,55 +3,9 @@
 
 #include "l1m.h"
 #include "l3.h"
+#include "l3_utils.h"
 #include "pool.h"
 #include "types.h"
-
-#define MIN(x, y) (((x) <= (y)) ? (x) : (y))
-
-static inline bool relation_holds(mublis_l3_relation_t relation, int lhs, int rhs) {
-  switch (relation) {
-    case MUBLIS_L3_ALL:
-      return true;
-    case MUBLIS_L3_LOWER:
-      return lhs <= rhs;
-    case MUBLIS_L3_UPPER:
-      return lhs >= rhs;
-  }
-}
-
-static bool block_is_outside(
-  mublis_l3_relation_t relation,
-  int lhs0, int lhs_len,
-  int rhs0, int rhs_len
-) {
-  switch (relation) {
-    case MUBLIS_L3_ALL:
-      return false;
-    
-    case MUBLIS_L3_LOWER:
-      return lhs0 >= rhs0 + rhs_len;
-
-    case MUBLIS_L3_UPPER:
-      return lhs0 + lhs_len <= rhs0;
-  }
-}
-
-static bool block_is_inside(
-  mublis_l3_relation_t relation,
-  int lhs0, int lhs_len,
-  int rhs0, int rhs_len
-) {
-  switch (relation) {
-    case MUBLIS_L3_ALL:
-      return true;
-    
-    case MUBLIS_L3_LOWER:
-      return lhs0 + lhs_len - 1 <= rhs0;
-
-    case MUBLIS_L3_UPPER:
-      return lhs0 >= rhs0 + rhs_len - 1;
-  }
-}
 
 static int first_update_pc(
   mublis_l3_domain_t domain,
@@ -91,17 +45,6 @@ static bool block_has_update(
   return true;
 }
 
-static inline mublis_uplo_t flip_uplo(mublis_uplo_t uplo) {
-  switch (uplo) {
-    case MUBLIS_DENSE:
-      return MUBLIS_DENSE;
-    case MUBLIS_UPPER:
-      return MUBLIS_LOWER;
-    case MUBLIS_LOWER:
-      return MUBLIS_UPPER;
-  }
-}
-
 int mublis_l3_sdriver(
   int m, int n, int k,
   float alpha,
@@ -117,11 +60,11 @@ int mublis_l3_sdriver(
 
   int error_code;
   const mublis_context_t *context;
-  if (error_code = mublis_get_safe_context(&context))
+  if ((error_code = mublis_get_safe_context(&context)))
     return error_code;
 
   // Once the pool is initialized, this is a no-op
-  if (error_code = mublis_pool_init(context)) {
+  if ((error_code = mublis_pool_init(context))) {
     return error_code;
   }
 
@@ -179,9 +122,9 @@ int mublis_l3_sdriver(
   }
 
   for (int jc = 0; jc < n; jc += nc) {
-    int j_max = jc + nc < n ? jc + nc : n;
+    int j_max = MIN(jc + nc, n);
     for (int pc = 0; pc < k; pc += kc) {
-      int p_max = pc + kc < k ? pc + kc : k;
+      int p_max = MIN(pc + kc, k);
       if (block_is_outside(domain.jp, jc, j_max - jc, pc, p_max - pc))
         continue;
 
@@ -196,7 +139,7 @@ int mublis_l3_sdriver(
         jc - pc
       );
       for (int ic = 0; ic < m; ic += mc) {
-        int i_max = ic + mc < m ? ic + mc : m;
+        int i_max = MIN(ic + mc, m);
         if (block_is_outside(domain.ji, jc, j_max - jc, ic, i_max - ic))
           continue;
         if (block_is_outside(domain.pi, pc, p_max - pc, ic, i_max - ic))

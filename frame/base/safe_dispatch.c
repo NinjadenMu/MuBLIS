@@ -1,7 +1,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "context.h"
+#include "safe_dispatch.h"
 
 static pthread_once_t context_once = PTHREAD_ONCE_INIT;
 static mublis_context_t cached_context;
@@ -17,7 +17,9 @@ static bool context_is_valid(const mublis_context_t *context) {
                         scontext.kc > 0 &&
                         scontext.nc > 0 &&
                         scontext.mc % scontext.mr == 0 &&
-                        scontext.nc % scontext.nr == 0;
+                        scontext.nc % scontext.nr == 0 &&
+                        scontext.kc % scontext.mr == 0 &&
+                        scontext.kc % scontext.nr == 0;
   bool dcontext_valid = dcontext.gemm_ukr != NULL &&
                         dcontext.mr > 0 &&
                         dcontext.nr > 0 &&
@@ -25,7 +27,9 @@ static bool context_is_valid(const mublis_context_t *context) {
                         dcontext.kc > 0 &&
                         dcontext.nc > 0 &&
                         dcontext.mc % dcontext.mr == 0 &&
-                        dcontext.nc % dcontext.nr == 0;
+                        dcontext.nc % dcontext.nr == 0 &&
+                        dcontext.kc % dcontext.mr == 0 &&
+                        dcontext.kc % dcontext.nr == 0;
 
   return scontext_valid && dcontext_valid;
 }

@@ -54,5 +54,3 @@
 
 MUBLIS_GEMM_IMPL(float, mublis_sgemm, mublis_l3_sdriver)
 MUBLIS_GEMM_IMPL(double, mublis_dgemm, mublis_l3_ddriver)
-
-#undef MUBLIS_GEMM_IMPL
