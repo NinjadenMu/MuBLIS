@@ -2,12 +2,12 @@
  * @file implementation of `pool.h`
  * 
  * To allow for concurrent requests, all operations are guarded by a central 
- * mutex.  
+ * mutex `pool_lock`.
  * 
  * At init, enough blocks are allocated to simultaneously satisfy 
  * `EXPECTED_LIVE_THREADS`.  Should there not be enough blocks available to 
- * satisfy all live threads, the pool will attempt to double its number of 
- * blocks until all requests can be satisfied.
+ * satisfy all live threads, the pool will attempt to double the number of 
+ * blocks it manages until all requests can be satisfied.
  * 
  * See pool.h for more details.
  */
@@ -25,6 +25,12 @@ typedef struct freelist {
   struct freelist *next;
 } freelist_t;
 
+/*
+ * This lock's lifetime is from init to the end of the process.
+ * It's not destroyed by `mublis_pool_destroy`, since pool requests issued 
+ * before the pool is actually destroyed would otherwise attempt to 
+ * lock a non-existent mutex.
+*/
 static pthread_mutex_t pool_lock = PTHREAD_MUTEX_INITIALIZER;
 static bool pool_initialized = false;
 // The version of the pool, incremented each time it's destroyed

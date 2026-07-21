@@ -23,12 +23,12 @@
 /*
  * Maximum expected number of threads expected to be concurrently making 
  * calls to BLAS/MuBLIS routines
-*/
+ */
 #define EXPECTED_LIVE_THREADS 8
 /* 
  * Minimum alignment in bytes expected for buffers
  * Usually decided by vectorization strategy
-*/
+ */
 #define MIN_BLOCK_ALIGNMENT 64
 
 typedef enum {

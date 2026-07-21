@@ -13,6 +13,7 @@
  * 
  * Creates a guarded persistent context object, so repeated calls (including  
  * from different threads) only need to use `mublis_get_context` once.
+ * Subsequent calls are efficient and directly read the cached context object.
  */
 int mublis_get_safe_context(const mublis_context_t **context);
 
