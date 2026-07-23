@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "l1m.h"
@@ -82,7 +83,7 @@ int mublis_strsm(
 
   for (int jc = 0; jc < n; jc += nc) {
     int nc_cur = MIN(nc, n - jc);
-    int first = 1;
+    bool first = true;
 
     if (uplo == MUBLIS_LOWER) {
       for (int pc = 0; pc < m; pc += kc) {
@@ -90,7 +91,7 @@ int mublis_strsm(
         int k_pack = round_up_to_multiple(kb, mr);
         int mb = MIN(mc, m - pc);
         float alpha_eff = first ? alpha : 1.0f;
-        first = 0;
+        first = false;
 
         mublis_spackm_trsm_rhs(
           b_pack_buf,
@@ -246,7 +247,7 @@ int mublis_strsm(
         int kb = MIN(kc, m - pc);
         int k_pack = round_up_to_multiple(kb, mr);
         float alpha_eff = first ? alpha : 1.0f;
-        first = 0;
+        first = false;
 
         mublis_spackm_trsm_rhs(
           b_pack_buf,
