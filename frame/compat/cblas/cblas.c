@@ -97,7 +97,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     }                                                                         \
   } while (0)
 
-#define CBLAS_RETURN_STATUS(call, routine)                                    \
+#define CBLAS_CALL_AND_RETURN(call, routine)                                  \
   do {                                                                        \
     int cblas_status = (call);                                                \
     if (cblas_status != 0) {                                                  \
@@ -126,7 +126,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     const char *routine = "cblas_" #prefix "gemm";                            \
     int min_lda;                                                              \
     int min_ldb;                                                              \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       cblas_valid_order(Order), 1, routine,                                   \
       "Illegal Order setting, %d\n", Order                                    \
@@ -148,7 +148,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     CBLAS_CHECK(                                                              \
       K >= 0, 6, routine, "K must be nonnegative, %d\n", K                    \
     );                                                                        \
-                                                                               \
+                                                                              \
     if (Order == CblasColMajor) {                                             \
       min_lda = cblas_max1(TransA == CblasNoTrans ? M : K);                   \
       min_ldb = cblas_max1(TransB == CblasNoTrans ? K : N);                   \
@@ -156,7 +156,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
       min_lda = cblas_max1(TransA == CblasNoTrans ? K : M);                   \
       min_ldb = cblas_max1(TransB == CblasNoTrans ? N : K);                   \
     }                                                                         \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       lda >= min_lda, 9, routine,                                             \
       "lda must be at least %d, %d\n", min_lda, lda                           \
@@ -169,9 +169,9 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
       ldc >= cblas_max1(Order == CblasColMajor ? M : N),                      \
       14, routine, "ldc is too small, %d\n", ldc                              \
     );                                                                        \
-                                                                               \
+                                                                              \
     if (Order == CblasColMajor) {                                             \
-      CBLAS_RETURN_STATUS(                                                    \
+      CBLAS_CALL_AND_RETURN(                                                  \
         mublis_##prefix##gemm(                                                \
           cblas_trans(TransA), cblas_trans(TransB),                           \
           M, N, K,                                                            \
@@ -184,9 +184,9 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
         routine                                                               \
       );                                                                      \
     }                                                                         \
-                                                                               \
+                                                                              \
     /* C^T = op(B)^T op(A)^T. */                                              \
-    CBLAS_RETURN_STATUS(                                                      \
+    CBLAS_CALL_AND_RETURN(                                                    \
       mublis_##prefix##gemm(                                                  \
         cblas_trans(TransB), cblas_trans(TransA),                             \
         N, M, K,                                                              \
@@ -214,7 +214,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
   ) {                                                                         \
     const char *routine = "cblas_" #prefix "symm";                            \
     int min_ldbc;                                                             \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       cblas_valid_order(Order), 1, routine,                                   \
       "Illegal Order setting, %d\n", Order                                    \
@@ -249,7 +249,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     );                                                                        \
                                                                                \
     if (Order == CblasColMajor) {                                             \
-      CBLAS_RETURN_STATUS(                                                    \
+      CBLAS_CALL_AND_RETURN(                                                    \
         mublis_##prefix##symm(                                                \
           cblas_side(Side), cblas_uplo(Uplo),                                 \
           M, N,                                                               \
@@ -262,8 +262,8 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
         routine                                                               \
       );                                                                      \
     }                                                                         \
-                                                                               \
-    CBLAS_RETURN_STATUS(                                                      \
+                                                                              \
+    CBLAS_CALL_AND_RETURN(                                                    \
       mublis_##prefix##symm(                                                  \
         cblas_flip_side(Side), cblas_flip_uplo(Uplo),                         \
         N, M,                                                                 \
@@ -290,7 +290,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
   ) {                                                                         \
     const char *routine = "cblas_" #prefix "syrk";                            \
     int min_lda;                                                              \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       cblas_valid_order(Order), 1, routine,                                   \
       "Illegal Order setting, %d\n", Order                                    \
@@ -309,12 +309,12 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     CBLAS_CHECK(                                                              \
       K >= 0, 5, routine, "K must be nonnegative, %d\n", K                    \
     );                                                                        \
-                                                                               \
+                                                                              \
     if (Order == CblasColMajor)                                               \
       min_lda = cblas_max1(Trans == CblasNoTrans ? N : K);                    \
     else                                                                      \
       min_lda = cblas_max1(Trans == CblasNoTrans ? K : N);                    \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       lda >= min_lda, 8, routine,                                             \
       "lda must be at least %d, %d\n", min_lda, lda                           \
@@ -323,9 +323,9 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
       ldc >= cblas_max1(N), 11, routine,                                      \
       "ldc is too small, %d\n", ldc                                           \
     );                                                                        \
-                                                                               \
+                                                                              \
     if (Order == CblasColMajor) {                                             \
-      CBLAS_RETURN_STATUS(                                                    \
+      CBLAS_CALL_AND_RETURN(                                                  \
         mublis_##prefix##syrk(                                                \
           cblas_uplo(Uplo), cblas_trans(Trans),                               \
           N, K,                                                               \
@@ -337,8 +337,8 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
         routine                                                               \
       );                                                                      \
     }                                                                         \
-                                                                               \
-    CBLAS_RETURN_STATUS(                                                      \
+                                                                              \
+    CBLAS_CALL_AND_RETURN(                                                    \
       mublis_##prefix##syrk(                                                  \
         cblas_flip_uplo(Uplo), cblas_flip_trans(Trans),                       \
         N, K,                                                                 \
@@ -365,7 +365,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
   ) {                                                                         \
     const char *routine = "cblas_" #prefix "syr2k";                           \
     int min_ldab;                                                             \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       cblas_valid_order(Order), 1, routine,                                   \
       "Illegal Order setting, %d\n", Order                                    \
@@ -384,12 +384,12 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     CBLAS_CHECK(                                                              \
       K >= 0, 5, routine, "K must be nonnegative, %d\n", K                    \
     );                                                                        \
-                                                                               \
+                                                                              \
     if (Order == CblasColMajor)                                               \
       min_ldab = cblas_max1(Trans == CblasNoTrans ? N : K);                   \
     else                                                                      \
       min_ldab = cblas_max1(Trans == CblasNoTrans ? K : N);                   \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       lda >= min_ldab, 8, routine,                                            \
       "lda must be at least %d, %d\n", min_ldab, lda                          \
@@ -404,7 +404,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
     );                                                                        \
                                                                                \
     if (Order == CblasColMajor) {                                             \
-      CBLAS_RETURN_STATUS(                                                    \
+      CBLAS_CALL_AND_RETURN(                                                    \
         mublis_##prefix##syr2k(                                               \
           cblas_uplo(Uplo), cblas_trans(Trans),                               \
           N, K,                                                               \
@@ -417,8 +417,8 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
         routine                                                               \
       );                                                                      \
     }                                                                         \
-                                                                               \
-    CBLAS_RETURN_STATUS(                                                      \
+                                                                              \
+    CBLAS_CALL_AND_RETURN(                                                    \
       mublis_##prefix##syr2k(                                                 \
         cblas_flip_uplo(Uplo), cblas_flip_trans(Trans),                       \
         N, K,                                                                 \
@@ -446,7 +446,7 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
   ) {                                                                         \
     const char *routine = "cblas_" #prefix #suffix;                           \
     int min_ldb;                                                              \
-                                                                               \
+                                                                              \
     CBLAS_CHECK(                                                              \
       cblas_valid_order(Order), 1, routine,                                   \
       "Illegal Order setting, %d\n", Order                                    \
@@ -477,15 +477,15 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
       lda >= cblas_max1(Side == CblasLeft ? M : N),                           \
       10, routine, "lda is too small, %d\n", lda                              \
     );                                                                        \
-                                                                               \
+                                                                              \
     min_ldb = cblas_max1(Order == CblasColMajor ? M : N);                     \
     CBLAS_CHECK(                                                              \
       ldb >= min_ldb, 12, routine,                                            \
       "ldb must be at least %d, %d\n", min_ldb, ldb                           \
     );                                                                        \
-                                                                               \
+                                                                              \
     if (Order == CblasColMajor) {                                             \
-      CBLAS_RETURN_STATUS(                                                    \
+      CBLAS_CALL_AND_RETURN(                                                  \
         mublis_##prefix##suffix(                                              \
           cblas_side(Side),                                                   \
           cblas_uplo(Uplo),                                                   \
@@ -499,8 +499,8 @@ static mublis_side_t cblas_flip_side(enum CBLAS_SIDE value) {
         routine                                                               \
       );                                                                      \
     }                                                                         \
-                                                                               \
-    CBLAS_RETURN_STATUS(                                                      \
+                                                                              \
+    CBLAS_CALL_AND_RETURN(                                                    \
       mublis_##prefix##suffix(                                                \
         cblas_flip_side(Side),                                                \
         cblas_flip_uplo(Uplo),                                                \
