@@ -59,3 +59,7 @@ bool block_is_inside(
       return lhs0 >= rhs0 + rhs_len - 1;
   }
 }
+
+int round_up_to_multiple(int value, int multiple) {
+  return ((value + multiple - 1) / multiple) * multiple;
+}

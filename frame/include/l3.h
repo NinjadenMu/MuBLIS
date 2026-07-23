@@ -105,6 +105,7 @@ int mublis_l3_ddriver(
  * @brief mirror of cblas_sgemm
  * 
  * Implemented as a shim over the general out-of-place driver.
+ * `m`, `n`, `k` reflect the dimensions of op(A) and op(B).
  */
 int mublis_sgemm(
   mublis_trans_t trans_a, mublis_trans_t trans_b, 
@@ -133,6 +134,7 @@ int mublis_ssymm(
  * @brief mirror of cblas_ssyrk
  * 
  * Implemented as a shim over the general out-of-place driver.
+ * `n`, `k` reflect the dimensions of op(A).
  */
 int mublis_ssyrk(
   mublis_uplo_t uplo, mublis_trans_t trans,
@@ -146,6 +148,7 @@ int mublis_ssyrk(
  * @brief mirror of cblas_ssyr2k
  * 
  * Implemented as a shim over the general out-of-place driver.
+ * `n`, `k` reflect the dimensions of op(A).
  */
 int mublis_ssyr2k(
   mublis_uplo_t uplo, mublis_trans_t trans,
@@ -166,6 +169,10 @@ int mublis_ssyr2k(
  * buffer.  Instead, it outputs directly to B by calculating loop traversal 
  * directions that ensure that entries in B that have been written to are 
  * never read a second time.
+ * 
+ * `m`, `n` reflect the dimensions of op(A).  `uplo` represents the triangle 
+ * data is stored in before transpose.  `mublis_strmm` will handle flipping 
+ * `uplo` for you based on the transpose flag.
  */
 int mublis_strmm(
   mublis_side_t side, mublis_uplo_t uplo,
@@ -185,6 +192,10 @@ int mublis_strmm(
  * buffer.  Instead, it outputs directly to B by calculating loop traversal 
  * directions that ensure that entries in B that have been written to are 
  * never read a second time.
+ * 
+ * `m`, `n` reflect the dimensions of op(A).  `uplo` represents the triangle 
+ * data is stored in before transpose.  `mublis_strsm` will handle flipping 
+ * `uplo` for you based on the transpose flag.
  */
 int mublis_strsm(
   mublis_side_t side, mublis_uplo_t uplo,

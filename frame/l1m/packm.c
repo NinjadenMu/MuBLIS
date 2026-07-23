@@ -1,3 +1,4 @@
+// clang-format off
 #include <stdbool.h>
 
 #include "l1m.h"
@@ -83,4 +84,77 @@ static inline int mublis_packm_is_stored(mublis_uplo_t uplo, int diagoff) {
 MUBLIS_PACKM_IMPL(float, mublis_spackm)
 MUBLIS_PACKM_IMPL(double, mublis_dpackm)
 
-#undef MUBLIS_PACKM_IMPL
+#define MUBLIS_PACKM_TRSM_RHS_IMPL(ctype, function_name)                       \
+  void function_name(                                                          \
+    ctype *restrict dst,                                                       \
+    const ctype *restrict src,                                                 \
+    int rs, int cs,                                                            \
+    int k0, int n0,                                                            \
+    int k0_pack, int nr                                                        \
+  ) {                                                                          \
+    for (int panel_start = 0; panel_start < n0; panel_start += nr) {           \
+      ctype *dst_panel = dst + panel_start * k0_pack;                          \
+                                                                               \
+      for (int p = 0; p < k0_pack; p++) {                                      \
+        for (int lane = 0; lane < nr; lane++) {                                \
+          int column = panel_start + lane;                                     \
+          ctype value = 0;                                                     \
+                                                                               \
+          if (p < k0 && column < n0)                                           \
+            value = src[p * rs + column * cs];                                 \
+                                                                               \
+          dst_panel[p * nr + lane] = value;                                    \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+  }
+
+MUBLIS_PACKM_TRSM_RHS_IMPL(float, mublis_spackm_trsm_rhs)
+MUBLIS_PACKM_TRSM_RHS_IMPL(double, mublis_dpackm_trsm_rhs)
+
+#define MUBLIS_PACKM_TRSM_A_IMPL(ctype, function_name)                         \
+  void function_name(                                                          \
+    ctype *restrict dst,                                                       \
+    const ctype *restrict src,                                                 \
+    int rs, int cs,                                                            \
+    int m0, int k0,                                                            \
+    int k0_pack, int mr,                                                       \
+    mublis_uplo_t uplo,                                                        \
+    mublis_packm_diag_t diag                                                   \
+  ) {                                                                          \
+    for (int panel_start = 0; panel_start < m0; panel_start += mr) {           \
+      ctype *dst_panel = dst + panel_start * k0_pack;                          \
+                                                                               \
+      for (int column = 0; column < k0_pack; column++) {                       \
+        for (int lane = 0; lane < mr; lane++) {                                \
+          int row = panel_start + lane;                                        \
+          int diag_delta = row - column;                                       \
+          ctype value;                                                         \
+                                                                               \
+          if (row >= m0 || column >= k0) {                                     \
+            value = row == column ? 1 : 0;                                     \
+          } else if (!mublis_packm_is_stored(uplo, diag_delta)) {              \
+            value = 0;                                                         \
+          } else if (diag_delta == 0) {                                        \
+            if (diag == MUBLIS_PACKM_DIAG_UNIT) {                              \
+              value = 1;                                                       \
+            } else {                                                           \
+              value = src[row * rs + column * cs];                             \
+                                                                               \
+              if (diag == MUBLIS_PACKM_DIAG_INVERT)                            \
+                value = (ctype)1 / value;                                      \
+            }                                                                  \
+          } else {                                                             \
+            value = src[row * rs + column * cs];                               \
+          }                                                                    \
+                                                                               \
+          dst_panel[column * mr + lane] = value;                               \
+        }                                                                      \
+      }                                                                        \
+    }                                                                          \
+  }
+
+MUBLIS_PACKM_TRSM_A_IMPL(float, mublis_spackm_trsm_a)
+MUBLIS_PACKM_TRSM_A_IMPL(double, mublis_dpackm_trsm_a)
+
+/* clang-format on */

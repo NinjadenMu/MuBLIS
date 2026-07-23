@@ -66,4 +66,40 @@ void mublis_dpackm(
   int diagoff
 );
 
+void mublis_spackm_trsm_rhs(
+  float *restrict dst,
+  const float *restrict src,
+  int rs, int cs,
+  int k0, int n0,
+  int k0_pack, int nr
+);
+
+void mublis_dpackm_trsm_rhs(
+  double *restrict dst,
+  const double *restrict src,
+  int rs, int cs,
+  int k0, int n0,
+  int k0_pack, int nr
+);
+
+void mublis_spackm_trsm_a(
+  float *restrict dst,
+  const float *restrict src,
+  int rs, int cs,
+  int m0, int k0,
+  int k0_pack, int mr,
+  mublis_uplo_t uplo,
+  mublis_packm_diag_t diag
+);
+
+void mublis_dpackm_trsm_a(
+  double *restrict dst,
+  const double *restrict src,
+  int rs, int cs,
+  int m0, int k0,
+  int k0_pack, int mr,
+  mublis_uplo_t uplo,
+  mublis_packm_diag_t diag
+);
+
 #endif

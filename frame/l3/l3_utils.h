@@ -24,4 +24,6 @@ static inline bool block_is_inside(
   int rhs0, int rhs_len
 );
 
+static int round_up_to_multiple(int value, int multiple);
+
 #endif
