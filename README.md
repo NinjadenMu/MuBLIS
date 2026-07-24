@@ -32,7 +32,7 @@ MuBLIS implements the out-of-place BLAS operations (GEMM, SYMM, SYRK, SYR2K) as 
 Because this L3 driver can be so general, MuBLIS exposes its interface as well as the standard L3 (C)BLAS interface.
 
 ### Micro-kernels
-The generic framework MuBLIS provides does cache-level optimizations like packing and tiling (since the "shape" of these optimizations is shared across all modern CPUs with multi-level caches), and breaks down a complex BLAS operation into a small unit of computation handled by a hardware-specific micro-kernel.  To optimize for hardware not supported out of the box by MuBLIS, users will have to implement new micro-kernels.  
+The generic framework MuBLIS provides does cache-level optimizations like packing and tiling (since the "shape" of these optimizations is shared across all modern CPUs with multi-level caches), and breaks down a complex BLAS operation into small units of computation that are handed off to a hardware-specific micro-kernel.  To optimize for hardware not supported out of the box by MuBLIS, users will have to implement new micro-kernels.  
 
 Common optimizations include:
 - Register blocking
