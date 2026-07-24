@@ -40,4 +40,4 @@ Common optimizations include:
 - Software prefetch
 - Considerations made for instruction level parallelism
 
-More information is included in the README in `targets/`, as well as example micro-kernels implementing the aforementioned optimizations with C intrinsics.
+More information is included in the README in `targets/`, as well as example micro-kernels implementing the aforementioned optimizations with C intrinsics.  Micro-kernels are also implemented directly in assembly.
