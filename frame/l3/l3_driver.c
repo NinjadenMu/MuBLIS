@@ -235,8 +235,8 @@ int mublis_l3_ddriver(
   double alpha,
   const double *restrict a, int rs_a, int cs_a,
   const double *restrict b, int rs_b, int cs_b,
-  float beta,
-  float *c, int rs_c, int cs_c,
+  double beta,
+  double *c, int rs_c, int cs_c,
   const mublis_l3_product_t *product
 ) {
   if (m == 0 || n == 0) {
