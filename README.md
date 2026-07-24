@@ -41,3 +41,5 @@ Common optimizations include:
 - Considerations made for instruction level parallelism
 
 More information is included in the README in `targets/`, as well as example micro-kernels implementing the aforementioned optimizations with C intrinsics.  Micro-kernels are also often implemented directly in assembly.
+
+If you're interested in learning about these optimizations, you may be interested in my [repo](https://github.com/NinjadenMu/fast_matmul) showing you how to optimize matrix multiplication from scratch step-by-step.
