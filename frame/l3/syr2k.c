@@ -1,14 +1,14 @@
 #include "l3.h"
 
 #define MUBLIS_SYR2K_IMPL(ctype, function_name, driver_name)                   \
-  int function_name(                                                          \
-    mublis_uplo_t uplo, mublis_trans_t trans,                                 \
+  int function_name(                                                           \
+    mublis_uplo_t uplo, mublis_trans_t trans,                                  \
     int n, int k,                                                              \
     ctype alpha,                                                               \
-    const ctype *a, int rs_a, int cs_a,                                       \
-    const ctype *b, int rs_b, int cs_b,                                       \
+    const ctype *a, int rs_a, int cs_a,                                        \
+    const ctype *b, int rs_b, int cs_b,                                        \
     ctype beta,                                                                \
-    ctype *c, int rs_c, int cs_c                                              \
+    ctype *c, int rs_c, int cs_c                                               \
   ) {                                                                          \
     if (trans == MUBLIS_TRANSPOSE) {                                           \
       int tmp = rs_a;                                                          \

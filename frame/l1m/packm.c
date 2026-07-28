@@ -1,4 +1,3 @@
-// clang-format off
 #include <stdbool.h>
 
 #include "l1m.h"
@@ -156,5 +155,3 @@ MUBLIS_PACKM_TRSM_RHS_IMPL(double, mublis_dpackm_trsm_rhs)
 
 MUBLIS_PACKM_TRSM_A_IMPL(float, mublis_spackm_trsm_a)
 MUBLIS_PACKM_TRSM_A_IMPL(double, mublis_dpackm_trsm_a)
-
-/* clang-format on */

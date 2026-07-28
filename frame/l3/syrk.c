@@ -2,13 +2,13 @@
 #include "types.h"
 
 #define MUBLIS_SYRK_IMPL(ctype, function_name, driver_name)                    \
-  int function_name(                                                          \
-    mublis_uplo_t uplo, mublis_trans_t trans,                                 \
+  int function_name(                                                           \
+    mublis_uplo_t uplo, mublis_trans_t trans,                                  \
     int n, int k,                                                              \
     ctype alpha,                                                               \
-    const ctype *a, int rs_a, int cs_a,                                       \
+    const ctype *a, int rs_a, int cs_a,                                        \
     ctype beta,                                                                \
-    ctype *c, int rs_c, int cs_c                                              \
+    ctype *c, int rs_c, int cs_c                                               \
   ) {                                                                          \
     if (trans == MUBLIS_TRANSPOSE) {                                           \
       int tmp = rs_a;                                                          \
