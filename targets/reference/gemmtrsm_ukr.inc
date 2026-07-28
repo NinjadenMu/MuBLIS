@@ -1,4 +1,3 @@
-// clang-format off
 #include "mublis_instantiate.h"
 #include "reference.h"
 
@@ -96,5 +95,3 @@ MUBLIS_GEMMTRSM_L_REFERENCE_IMPL(double, mublis_dgemmtrsml_ukr_reference, D_MR,
                                  D_NR)
 MUBLIS_GEMMTRSM_U_REFERENCE_IMPL(double, mublis_dgemmtrsmu_ukr_reference, D_MR,
                                  D_NR)
-
-/* clang-format on */

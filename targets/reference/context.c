@@ -4,7 +4,7 @@
 #include "gemmtrsm_ukr.inc"
 
 MUBLIS_CONTEXT_STAMP(
-  reference_context,
+  reference_context, // name here should match its name in registry
 
   mublis_sgemm_ukr_reference,
   mublis_sgemmtrsml_ukr_reference,
