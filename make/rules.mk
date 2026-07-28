@@ -12,8 +12,6 @@ PIC_CFLAGS ?= -fPIC
 THREAD_CFLAGS ?= -pthread
 POSIX_CPPFLAGS ?= -D_POSIX_C_SOURCE=200112L # for posix_memalign
 
-TARGET_REGISTRY ?= targets/target_registry.h
-
 COMMON_CPPFLAGS := \
 	$(POSIX_CPPFLAGS) \
 	-Iinclude \
@@ -83,5 +81,5 @@ $(LIB): $(ALL_OBJS)
 -include $(ALL_DEPS)
 
 clean:
-	rm -r $(CONFIG_BUILD_DIR)
+	rm -rf $(CONFIG_BUILD_DIR)
 
