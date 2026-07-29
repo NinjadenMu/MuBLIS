@@ -51,7 +51,16 @@ CONFIG_BUILD_DIR := $(BUILD_ROOT)/$(CONFIG)
 OBJ_DIR := $(CONFIG_BUILD_DIR)/obj
 LIB_DIR := $(CONFIG_BUILD_DIR)/lib
 
-LIB := $(LIB_DIR)/libmublis.a
+HOST_OS ?= $(shell uname -s)
+
+ifeq ($(HOST_OS),Darwin)
+DYNAMIC_LIB_SUFFIX ?= dylib
+else
+DYNAMIC_LIB_SUFFIX ?= so
+endif
+
+STATIC_LIB := $(LIB_DIR)/libmublis.a
+DYNAMIC_LIB := $(LIB_DIR)/libmublis.$(DYNAMIC_LIB_SUFFIX)
 
 c_to_o = $(patsubst %.c,$(OBJ_DIR)/%.o,$(1))
 S_to_o = $(patsubst %.S,$(OBJ_DIR)/%.o,$(1))

@@ -3,6 +3,12 @@ AR ?= ar
 
 ARFLAGS := rcs
 
+ifeq ($(HOST_OS),Darwin)
+DYNAMIC_LDFLAGS ?= -dynamiclib
+else
+DYNAMIC_LDFLAGS ?= -shared
+endif
+
 CSTD ?= c17
 CFLAGS ?= -O3
 WARN_CFLAGS ?= -Wall -Wextra -Wpedantic
@@ -28,11 +34,15 @@ COMMON_CFLAGS := \
 COMMON_ASFLAGS := \
 	$(PIC_CFLAGS)
 
-.PHONY: all lib clean format
+.PHONY: all lib static dynamic clean
 
 all: lib
 
-lib: $(LIB)
+lib: $(STATIC_LIB) $(DYNAMIC_LIB)
+
+static: $(STATIC_LIB)
+
+dynamic: $(DYNAMIC_LIB)
 
 $(DISPATCH_OBJ): $(TARGET_REGISTRY)
 
@@ -73,10 +83,21 @@ $(OBJ_DIR)/%.o: %.S
 		-c "$<" \
 		-o "$@"
 
-$(LIB): $(ALL_OBJS)
+$(STATIC_LIB): $(ALL_OBJS)
 	@mkdir -p "$(@D)"
 	$(RM) "$@"
 	$(AR) $(ARFLAGS) "$@" $(ALL_OBJS)
+
+$(DYNAMIC_LIB): $(ALL_OBJS)
+	@mkdir -p "$(@D)"
+	$(RM) "$@"
+	$(CC) \
+		$(DYNAMIC_LDFLAGS) \
+		$(LDFLAGS) \
+		$(THREAD_CFLAGS) \
+		-o "$@" \
+		$(ALL_OBJS) \
+		$(LDLIBS)
 
 -include $(ALL_DEPS)
 
