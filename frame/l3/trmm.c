@@ -120,6 +120,13 @@ static int first_update_pc(
     int kc = context->context_field.kc;                                        \
     int nc = context->context_field.nc;                                        \
                                                                                \
+    int triangular_block = side == MUBLIS_LEFT ? mc : nc;                      \
+    int kc_limit = MIN(kc, triangular_block / 4);                              \
+    int kc_granularity = side == MUBLIS_LEFT ? mr : nr;                        \
+    kc_limit -= kc_limit % kc_granularity;                                     \
+    if (kc_limit > 0)                                                          \
+      kc = kc_limit;                                                           \
+                                                                               \
     mublis_pool_block_t pool_block;                                            \
     if ((error_code = mublis_pool_checkout(pool_role, &pool_block)))           \
       return error_code;                                                       \
