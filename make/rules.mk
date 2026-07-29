@@ -3,8 +3,16 @@ AR ?= ar
 
 ARFLAGS := rcs
 
-COMMON_TARGET_FLAGS := \
+CC_TARGET_MODE ?= $(if $(findstring clang,$(shell $(CC) --version 2>/dev/null)),clang,fixed)
+
+ifeq ($(CC_TARGET_MODE),clang)
+CC_TARGET_FLAGS ?= \
 	$(if $(strip $(TARGET_TRIPLE)),--target=$(strip $(TARGET_TRIPLE)))
+else
+CC_TARGET_FLAGS ?=
+endif
+
+COMMON_TARGET_FLAGS := $(strip $(CC_TARGET_FLAGS))
 
 ifeq ($(TARGET_OS),Darwin)
 DYNAMIC_LDFLAGS ?= -dynamiclib

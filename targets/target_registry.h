@@ -7,6 +7,7 @@
 
 // Register target contexts by name here
 REGISTER_TARGET_CONTEXT(reference_context)
+REGISTER_TARGET_CONTEXT(aarch64_context)
 REGISTER_TARGET_CONTEXT(firestorm_context)
 
 #endif
