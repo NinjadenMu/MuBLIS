@@ -16,5 +16,5 @@ MUBLIS_CONTEXT_STAMP(
   mublis_dgemmtrsml_ukr_reference,
   mublis_dgemmtrsmu_ukr_reference,
   D_MR, D_NR,
-  32, 32, 32
+  48, 48, 48
 )
