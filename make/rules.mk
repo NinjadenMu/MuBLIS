@@ -3,7 +3,10 @@ AR ?= ar
 
 ARFLAGS := rcs
 
-ifeq ($(HOST_OS),Darwin)
+COMMON_TARGET_FLAGS := \
+	$(if $(strip $(TARGET_TRIPLE)),--target=$(strip $(TARGET_TRIPLE)))
+
+ifeq ($(TARGET_OS),Darwin)
 DYNAMIC_LDFLAGS ?= -dynamiclib
 else
 DYNAMIC_LDFLAGS ?= -shared
@@ -44,8 +47,6 @@ static: $(STATIC_LIB)
 
 dynamic: $(DYNAMIC_LIB)
 
-$(DISPATCH_OBJ): $(TARGET_REGISTRY)
-
 $(ALL_OBJS): \
 	$(BUILD_SYSTEM_MAKEFILES) \
 	$(CONFIG_FILE) \
@@ -54,6 +55,7 @@ $(ALL_OBJS): \
 $(OBJ_DIR)/%.o: %.c
 	@mkdir -p "$(@D)"
 	$(CC) \
+		$(COMMON_TARGET_FLAGS) \
 		$(COMMON_CPPFLAGS) \
 		$(CPPFLAGS) \
 		$(PRIVATE_CPPFLAGS) \
@@ -70,6 +72,7 @@ $(OBJ_DIR)/%.o: %.c
 $(OBJ_DIR)/%.o: %.S
 	@mkdir -p "$(@D)"
 	$(CC) \
+		$(COMMON_TARGET_FLAGS) \
 		$(COMMON_CPPFLAGS) \
 		$(CPPFLAGS) \
 		$(PRIVATE_CPPFLAGS) \
@@ -92,6 +95,7 @@ $(DYNAMIC_LIB): $(ALL_OBJS)
 	@mkdir -p "$(@D)"
 	$(RM) "$@"
 	$(CC) \
+		$(COMMON_TARGET_FLAGS) \
 		$(DYNAMIC_LDFLAGS) \
 		$(LDFLAGS) \
 		$(THREAD_CFLAGS) \

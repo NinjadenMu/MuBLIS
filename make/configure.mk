@@ -10,6 +10,7 @@ $(error Unknown CONFIG "$(CONFIG)". Available configurations: $(AVAILABLE_CONFIG
 endif
 
 include $(CONFIG_FILE)
+TARGET_TRIPLE ?= $(CONFIG_TARGET_TRIPLE)
 
 ifeq ($(strip $(CONFIG_DISPATCH_SRC)),)
 $(error $(CONFIG_FILE) must set CONFIG_DISPATCH_SRC)
@@ -52,8 +53,9 @@ OBJ_DIR := $(CONFIG_BUILD_DIR)/obj
 LIB_DIR := $(CONFIG_BUILD_DIR)/lib
 
 HOST_OS ?= $(shell uname -s)
+TARGET_OS ?= $(if $(strip $(CONFIG_TARGET_OS)),$(CONFIG_TARGET_OS),$(HOST_OS))
 
-ifeq ($(HOST_OS),Darwin)
+ifeq ($(TARGET_OS),Darwin)
 DYNAMIC_LIB_SUFFIX ?= dylib
 else
 DYNAMIC_LIB_SUFFIX ?= so
