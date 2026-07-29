@@ -15,8 +15,8 @@
     (void)aux;                                                                 \
                                                                                \
     if (k <= 0 || alpha == 0) {                                                \
-      for (int j = 0; j < (nr); j++) {                                         \
-        for (int i = 0; i < (mr); i++) {                                       \
+      for (int j = 0; j < nr; j++) {                                           \
+        for (int i = 0; i < mr; i++) {                                         \
           ctype *cij = c + i * rs_c + j * cs_c;                                \
                                                                                \
           if (beta == 0)                                                       \
