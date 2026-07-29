@@ -19,7 +19,7 @@ UNIT = 132
 LEFT = 141
 RIGHT = 142
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 DTYPES = {
   np.dtype(np.float32): {
