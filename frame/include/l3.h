@@ -52,11 +52,6 @@ typedef struct {
   mublis_l3_operand_t b;
 } mublis_l3_product_t;
 
-// Used by MuBLIS to allow kernels to prefetch C tiles
-typedef struct {
-  const void *c_next;
-} mublis_auxinfo_t;
-
 /**
  * @brief Uniform interface for single precision out-of-place operations
  * 
