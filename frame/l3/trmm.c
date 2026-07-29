@@ -204,6 +204,21 @@ static int first_update_pc(
                 domain, reverse_pc, jr, ir, kc                                 \
               );                                                               \
                                                                                \
+              int c_next_ir = ir + mr;                                         \
+              int c_next_jr = jr;                                              \
+              if (c_next_ir >= i_max) {                                        \
+                c_next_ir = ic;                                                \
+                c_next_jr += nr;                                               \
+              }                                                                \
+              if (c_next_jr >= j_max) {                                        \
+                c_next_ir = i_max;                                             \
+                c_next_jr = jc;                                                \
+              }                                                                \
+                                                                               \
+              const mublis_auxinfo_t aux = {                                   \
+                .c_next = &b[c_next_ir * rs_b + c_next_jr * cs_b]              \
+              };                                                               \
+                                                                               \
               if (ir + mr <= i_max && jr + nr <= j_max) {                      \
                 context->context_field.gemm_ukr(                               \
                   p_max - pc,                                                  \
@@ -213,7 +228,7 @@ static int first_update_pc(
                   first_update ? (ctype)0 : (ctype)1,                          \
                   &b[ir * rs_b + jr * cs_b],                                   \
                   rs_b, cs_b,                                                  \
-                  NULL                                                         \
+                  &aux                                                         \
                 );                                                             \
               }                                                                \
               else {                                                           \
@@ -225,7 +240,7 @@ static int first_update_pc(
                   (ctype)0,                                                    \
                   c_buf,                                                       \
                   1, mr,                                                       \
-                  NULL                                                         \
+                  &aux                                                         \
                 );                                                             \
                                                                                \
                 for (int j = jr; j < j_tile_max; j++) {                        \

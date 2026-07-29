@@ -174,6 +174,21 @@ static bool block_has_update(
               bool first_update =                                              \
                 pc == first_update_pc(domain, jr, ir, kc);                     \
                                                                                \
+              int c_next_ir = ir + mr;                                         \
+              int c_next_jr = jr;                                              \
+              if (c_next_ir >= i_max) {                                        \
+                c_next_ir = ic;                                                \
+                c_next_jr += nr;                                               \
+              }                                                                \
+              if (c_next_jr >= j_max) {                                        \
+                c_next_ir = i_max;                                             \
+                c_next_jr = jc;                                                \
+              }                                                                \
+                                                                               \
+              const mublis_auxinfo_t aux = {                                   \
+                .c_next = &c[c_next_ir * rs_c + c_next_jr * cs_c]              \
+              };                                                               \
+                                                                               \
               if (block_is_inside(domain.ji, jr, nr, ir, mr) &&                \
                   ir + mr <= i_max && jr + nr <= j_max) {                      \
                 (context->context_field.gemm_ukr)(                             \
@@ -184,7 +199,7 @@ static bool block_has_update(
                   first_update ? beta : (ctype)1,                              \
                   &c[ir * rs_c + jr * cs_c],                                   \
                   rs_c, cs_c,                                                  \
-                  NULL                                                         \
+                  &aux                                                         \
                 );                                                             \
               }                                                                \
               else {                                                           \
@@ -196,7 +211,7 @@ static bool block_has_update(
                   (ctype)0,                                                    \
                   c_buf,                                                       \
                   1, mr,                                                       \
-                  NULL                                                         \
+                  &aux                                                         \
                 );                                                             \
                                                                                \
                 for (int j = jr; j < MIN(jr + nr, j_max); j++) {               \

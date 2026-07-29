@@ -121,6 +121,21 @@
               ctype *cij =                                                     \
                 &b[(pc + ir) * rs_b + (jc + jr) * cs_b];                       \
                                                                                \
+              int c_next_ir = pc + ir + mr;                                    \
+              int c_next_jr = jc + jr;                                         \
+              if (ir + mr >= mb) {                                             \
+                c_next_ir = pc;                                                \
+                c_next_jr += nr;                                               \
+              }                                                                \
+              if (c_next_jr >= jc + nb) {                                      \
+                c_next_ir = pc + mb;                                           \
+                c_next_jr = jc;                                                \
+              }                                                                \
+                                                                               \
+              const mublis_auxinfo_t aux = {                                   \
+                .c_next = &b[c_next_ir * rs_b + c_next_jr * cs_b]              \
+              };                                                               \
+                                                                               \
               if (ir < kb) {                                                   \
                 ctype *b11 = bj + ir * nr;                                     \
                 ctype *c_dst =                                                 \
@@ -139,7 +154,7 @@
                   b11,                                                         \
                   c_dst,                                                       \
                   rs_dst, cs_dst,                                              \
-                  NULL                                                         \
+                  &aux                                                         \
                 );                                                             \
                                                                                \
                 if (c_dst == c_buf) {                                          \
@@ -155,7 +170,7 @@
                     ai, bj,                                                    \
                     alpha_eff,                                                 \
                     cij, rs_b, cs_b,                                           \
-                    NULL                                                       \
+                    &aux                                                       \
                   );                                                           \
                 } else {                                                       \
                   context->context_field.gemm_ukr(                             \
@@ -164,7 +179,7 @@
                     ai, bj,                                                    \
                     0,                                                         \
                     c_buf, 1, mr,                                              \
-                    NULL                                                       \
+                    &aux                                                       \
                   );                                                           \
                                                                                \
                   for (int j = 0; j < nr_cur; j++) {                           \
@@ -208,6 +223,21 @@
                 ctype *cij =                                                   \
                   &b[(ic + ir) * rs_b + (jc + jr) * cs_b];                     \
                                                                                \
+                int c_next_ir = ic + ir + mr;                                  \
+                int c_next_jr = jc + jr;                                       \
+                if (ir + mr >= mb_cur) {                                       \
+                  c_next_ir = ic;                                              \
+                  c_next_jr += nr;                                             \
+                }                                                              \
+                if (c_next_jr >= jc + nb) {                                    \
+                  c_next_ir = ic + mb_cur;                                     \
+                  c_next_jr = jc;                                              \
+                }                                                              \
+                                                                               \
+                const mublis_auxinfo_t aux = {                                 \
+                  .c_next = &b[c_next_ir * rs_b + c_next_jr * cs_b]            \
+                };                                                             \
+                                                                               \
                 if (mr_cur == mr && nr_cur == nr) {                            \
                   context->context_field.gemm_ukr(                             \
                     kb,                                                        \
@@ -215,7 +245,7 @@
                     ai, bj,                                                    \
                     alpha_eff,                                                 \
                     cij, rs_b, cs_b,                                           \
-                    NULL                                                       \
+                    &aux                                                       \
                   );                                                           \
                 } else {                                                       \
                   context->context_field.gemm_ukr(                             \
@@ -224,7 +254,7 @@
                     ai, bj,                                                    \
                     0,                                                         \
                     c_buf, 1, mr,                                              \
-                    NULL                                                       \
+                    &aux                                                       \
                   );                                                           \
                                                                                \
                   for (int j = 0; j < nr_cur; j++) {                           \
@@ -280,6 +310,22 @@
               ctype *b11 = bj + ir * nr;                                       \
               ctype *cij =                                                     \
                 &b[(pc + ir) * rs_b + (jc + jr) * cs_b];                       \
+                                                                               \
+              int c_next_ir = pc + ir - mr;                                    \
+              int c_next_jr = jc + jr;                                         \
+              if (ir == 0) {                                                   \
+                c_next_ir = pc + ir_start;                                     \
+                c_next_jr += nr;                                               \
+              }                                                                \
+              if (c_next_jr >= jc + nb) {                                      \
+                c_next_ir = 0;                                                 \
+                c_next_jr = jc;                                                \
+              }                                                                \
+                                                                               \
+              const mublis_auxinfo_t aux = {                                   \
+                .c_next = &b[c_next_ir * rs_b + c_next_jr * cs_b]              \
+              };                                                               \
+                                                                               \
               ctype *c_dst =                                                   \
                 mr_cur == mr && nr_cur == nr ? cij : c_buf;                    \
               int rs_dst =                                                     \
@@ -296,7 +342,7 @@
                 b11,                                                           \
                 c_dst,                                                         \
                 rs_dst, cs_dst,                                                \
-                NULL                                                           \
+                &aux                                                           \
               );                                                               \
                                                                                \
               if (c_dst == c_buf) {                                            \
@@ -332,6 +378,21 @@
                 ctype *cij =                                                   \
                   &b[(ic + ir) * rs_b + (jc + jr) * cs_b];                     \
                                                                                \
+                int c_next_ir = ic + ir + mr;                                  \
+                int c_next_jr = jc + jr;                                       \
+                if (ir + mr >= mb_cur) {                                       \
+                  c_next_ir = ic;                                              \
+                  c_next_jr += nr;                                             \
+                }                                                              \
+                if (c_next_jr >= jc + nb) {                                    \
+                  c_next_ir = ic + mb_cur;                                     \
+                  c_next_jr = jc;                                              \
+                }                                                              \
+                                                                               \
+                const mublis_auxinfo_t aux = {                                 \
+                  .c_next = &b[c_next_ir * rs_b + c_next_jr * cs_b]            \
+                };                                                             \
+                                                                               \
                 if (mr_cur == mr && nr_cur == nr) {                            \
                   context->context_field.gemm_ukr(                             \
                     kb,                                                        \
@@ -339,7 +400,7 @@
                     ai, bj,                                                    \
                     alpha_eff,                                                 \
                     cij, rs_b, cs_b,                                           \
-                    NULL                                                       \
+                    &aux                                                       \
                   );                                                           \
                 } else {                                                       \
                   context->context_field.gemm_ukr(                             \
@@ -348,7 +409,7 @@
                     ai, bj,                                                    \
                     0,                                                         \
                     c_buf, 1, mr,                                              \
-                    NULL                                                       \
+                    &aux                                                       \
                   );                                                           \
                                                                                \
                   for (int j = 0; j < nr_cur; j++) {                           \
