@@ -79,6 +79,6 @@ MuBLIS provides some non-comprehensive correctness tests in `test/correctness`, 
 - `targets/` - Hardware specialization code (micro-kernels, block sizes, contexts, compiler flags)
 - `config/` - Build configurations
 - `make/`
-- `test`
+- `test/`
   - `test/correctness/` - Correctness tests for CBLAS interface
   - `test/performance/` - Performance benchmarking tools
