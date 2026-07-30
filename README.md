@@ -7,11 +7,11 @@ Implementing a full BLAS library (which you may want to do if you're working wit
 
 It then serves as two libraries in one.  Its primary purpose is helping users quickly build new L3 BLAS libraries targeted towards custom hardware (which they can do in ~200 lines of hardware-specific code with MuBLIS), since MuBLIS provides an implementation of the large generic portion. This explains MuBLIS's name: BLIS = BLAS-like Library Instantiation Software.  However, MuBLIS can also be used out of the box as an efficient L3 BLAS implementation for many existing CPUs, since I've written and included optimized micro-kernels using ARM NEON and AVX2 intrinsics.
 
+![GFLOPs on f32 L3 BLAS Operations (Apple M4)](images/gflops_apple_m4.png)
+
 MuBLIS does not sacrifice performance for its generality.  With this repo's included NEON micro-kernels, MuBLIS can instantiate a BLAS library that slightly outperforms OpenBLAS (a highly optimized and popular BLAS implementation) built for my Apple Silicon machine, reaching ~80% peak FLOPs for single-threaded general matrix multiply.  When instantiated with an AVX2 micro-kernel, it achieves strong performance on several x86 CPUs, including the Intel Xeon Gold 6248R, AMD Ryzen 7 7700x, and the Intel i5-7500.  
 
 The usefulness of being able to easily create hardware-specialized libraries is also demonstrated by the fact that specialized libraries instantiated with MuBLIS consistently achieve ~20x speedups over reasonably optimized generic baseline implementations that use cache tiling.
-
-![GFLOPs on f32 L3 BLAS Operations (Apple M4)](images/gflops_apple_m4.png)
 
 MuBLIS can also be used to produce "fat binaries" at compile-time which support entire families of hardware, only specializing to a specific hardware target at run-time.
 
@@ -79,4 +79,3 @@ MuBLIS provides some non-comprehensive correctness tests in `test/correctness`, 
 - `test`
   - `test/correctness/` - Correctness tests for CBLAS interface
   - `test/performance/` - Performance benchmarking tools
-  
