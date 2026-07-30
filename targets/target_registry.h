@@ -9,5 +9,6 @@
 REGISTER_TARGET_CONTEXT(reference_context)
 REGISTER_TARGET_CONTEXT(aarch64_context)
 REGISTER_TARGET_CONTEXT(firestorm_context)
+REGISTER_TARGET_CONTEXT(avx2_context)
 
 #endif
