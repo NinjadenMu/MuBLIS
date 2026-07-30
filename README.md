@@ -50,14 +50,17 @@ More information is included in the README in `targets/`, as well as example mic
 
 If you're interested in learning about these optimizations, you may be interested in my [repo](https://github.com/NinjadenMu/fast_matmul) showing you how to optimize matrix multiplication step-by-step from a naive i-j-k loop to the micro-kernels used by MuBLIS.
 
-### Usage
+### Building
 MuBLIS can produce static archives and dynamic libraries, and has been tested on MacOS and Linux across several hardware platforms.  Generated libraries implement the real L3 CBLAS interface (`include/cblas.h`), as well as MuBLIS's general driver and mirrors of CBLAS routines (`include/mublis.h`).
 
 To build a BLAS library for a system optimized for out of the box by MuBLIS (check `config/`), run `make CONFIG={config name}`.  The `reference` config is generic and should be supported by all platforms.
 
+### Instantiating New Libraries
 To build a BLAS library for systems not supported out of the box, a new config and possibly new targets must be created.
 
-A target contains the code MuBLIS needs to specialize to a hardware property (such as a specific microarchitecture or vector instruction extension set.)  A config contains the code needed by MuBLIS to select a specialized target to dispatch to at runtime.  The separation is useful because it allows users to build "fat binaries" optimizing for several hardware platforms at once.  For example, users may create targets for Zen 3, Haswell, generic CPUs supporting AVX2 (already provided by MuBLIS), and generic CPUs not supporting vector extensions.  Then, users may create a single Linux x86 config containing code that detects the hardware platform at runtime and selects the most appropriate target, thus simultaneously targeting Zen 3, Haswell, AVX2 capable CPUs, and old x86 CPUs.
+A target contains the code MuBLIS needs to specialize to a hardware property (such as a specific microarchitecture or vector instruction extension set.)  A config contains the code needed by MuBLIS to select a specialized target to dispatch to at runtime.  
+
+This separation is useful because it allows users to build "fat binaries" optimizing for several hardware platforms at once.  For example, users may create targets for Zen 3, Haswell, generic CPUs supporting AVX2 (already provided by MuBLIS), and generic CPUs not supporting vector extensions.  Then, users may create a single Linux x86 config containing code that detects the hardware platform at runtime and selects the most appropriate target, thus simultaneously targeting Zen 3, Haswell, AVX2 capable CPUs, and old x86 CPUs.
 
 New hardware targets should be created and registered in `targets/`.  MuBLIS defines the interface all targets must fulfill in `include/mublis_instantiate.h`.  Generally, targets should contain micro-kernel implementations, a context object, and hardware-specific build rules if necessary.  More detailed information in `targets/README.md`.
 
@@ -67,7 +70,7 @@ MuBLIS provides some non-comprehensive correctness tests in `test/correctness`, 
 
 ### Repository Layout
 - `include/` - Public headers for L3 CBLAS API, MuBLIS API, and library instantiation interfaces
-- 'frame/ - Hardware-independent implementation of the BLIS framework
+- `frame/` - Hardware-independent implementation of the BLIS framework
   - `frame/base/` - Shared runtime infrastructure, including a pool allocator for MuBLIS's repeated large, fix sized, aligned memory allocations and helpers for runtime dispatch
   - `frame/l1m/` - Matrix-packing operations used by L3 operations (note that non-packing L1 BLAS operations aren't implemented)
   - `frame/l3/` - General L3 driver, MuBLIS mirrors of real L3 CBLAS operations
