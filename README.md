@@ -1,16 +1,22 @@
 ### What's MuBLIS?
-MuBLIS is a fast thread-safe library for optimized linear algebra routines, and a "meta" library that makes building new specialized linear algebra libraries easier (more on that in the next paragraphs).
+MuBLIS is a fast thread-safe library for optimized linear algebra routines, and a framework that makes building new specialized linear algebra libraries easier (more on that in the next paragraphs).
 
 More software than ever can benefit from high performance implementations of linear algebra routines (think machine learning).  Because optimizing linear algebra routines is hard and highly dependent on hardware, software like NumPy and PyTorch usually link against BLAS (basic linear algebra subroutines) libraries provided by hardware vendors like Nvidia (cuBLAS) and Intel (MKL).
 
 Implementing a full BLAS library (which you may want to do if you're working with obscure/new hardware) can be time consuming and difficult to get right.  MuBLIS splits the work of implementing a L3 BLAS library into a larger generic portion that requires no hardware-specific optimizations and small "micro-kernels" which should be hand optimized to the micro-architecture.  
 
-It then serves as two libraries in one.  Its primary purpose is helping users quickly build new L3 BLAS libraries targeted towards custom hardware (which they can do in ~200 lines of hardware-specific code with MuBLIS), since MuBLIS provides an implementation of the large generic portion. This explains MuBLIS's name: BLIS = BLAS-like Library Instantiation Software.  However, MuBLIS can also be used out of the box as an efficient L3 BLAS implementation for many existing CPUs, since I've written and included a few optimized micro-kernels for common ARM and x86 micro-architectures.
+It then serves as two libraries in one.  Its primary purpose is helping users quickly build new L3 BLAS libraries targeted towards custom hardware (which they can do in ~200 lines of hardware-specific code with MuBLIS), since MuBLIS provides an implementation of the large generic portion. This explains MuBLIS's name: BLIS = BLAS-like Library Instantiation Software.  However, MuBLIS can also be used out of the box as an efficient L3 BLAS implementation for many existing CPUs, since I've written and included optimized micro-kernels using ARM NEON and AVX2 intrinsics.
+
+MuBLIS does not sacrifice performance for its generality.  With this repo's included NEON micro-kernels, MuBLIS can instantiate a BLAS library that slightly outperforms OpenBLAS (a highly optimized and popular BLAS implementation) built for my Apple Silicon machine, reaching ~80% peak FLOPs for single-threaded general matrix multiply.  When instantiated with an AVX2 micro-kernel, it achieves strong performance on several x86 CPUs, including the Intel Xeon Gold 6248R, AMD Ryzen 7 7700x, and the Intel i5-7500.  
+
+The usefulness of being able to easily create hardware-specialized libraries is also demonstrated by the fact that specialized libraries instantiated with MuBLIS consistently achieve ~20x speedups over reasonably optimized generic baseline implementations that use cache tiling.
+
+![GFLOPs on f32 L3 BLAS Operations (Apple M4)](images/gflops_apple_m4.png)
 
 MuBLIS can also be used to produce "fat binaries" at compile-time which support entire families of hardware, only specializing to a specific hardware target at run-time.
 
 ### L3 BLAS
-The BLAS interface has 3 levels: L1 for scalar and vector operations, L2 for matrix-vector operations, and L3 for matrix-matrix operations.  L3 operations benefit the most from optimization, since memory loads grow in $O(n^2)$ while computation grows in $O(n^3)$.  Because of this, cache and register optimizations that allow for more computation to be done for a single load (usually by achieving better reuse) can lead to dramatically faster (think 2 orders of magnitude!) implementations.  L1 and L2 operations have comparatively less headroom for optimization since they do at most $O(n^2)$ computation work, and are easier to implement.  Therefore, MuBLIS currently only implements functionality for L3 BLAS.  [BLIS](https://github.com/flame/blis), which this project is heavily inspired by, does in fact support the full BLAS interface.
+The BLAS interface has 3 levels: L1 for scalar and vector operations, L2 for matrix-vector operations, and L3 for matrix-matrix operations.  L3 operations benefit the most from optimization, since memory loads grow in $O(n^2)$ while computation grows in $O(n^3)$.  Because of this, cache and register optimizations that allow for more computation to be done for a single load (usually by achieving better reuse) can lead to dramatically faster (think 2 orders of magnitude!) implementations.  L1 and L2 operations have comparatively less headroom for optimization since they do at most $O(n^2)$ computation work, and are easier to implement.  Therefore, MuBLIS currently only implements functionality for real L3 BLAS.  [BLIS](https://github.com/flame/blis), which this project is heavily inspired by, does in fact support the full BLAS interface.
 
 BLAS exposes the following L3 routines for single and double precision real matrices:
 With "op" denoting an optional transpose, 
@@ -38,8 +44,39 @@ Common optimizations include:
 - Register blocking
 - Vectorization
 - Software prefetch
-- Considerations made for instruction level parallelism
+- Considerations made for instruction level parallelism and latency hiding
 
 More information is included in the README in `targets/`, as well as example micro-kernels implementing the aforementioned optimizations with C intrinsics.  Micro-kernels are also often implemented directly in assembly.
 
-If you're interested in learning about these optimizations, you may be interested in my [repo](https://github.com/NinjadenMu/fast_matmul) showing you how to optimize matrix multiplication from scratch step-by-step.
+If you're interested in learning about these optimizations, you may be interested in my [repo](https://github.com/NinjadenMu/fast_matmul) showing you how to optimize matrix multiplication step-by-step from a naive i-j-k loop to the micro-kernels used by MuBLIS.
+
+### Usage
+MuBLIS can produce static archives and dynamic libraries, and has been tested on MacOS and Linux across several hardware platforms.  Generated libraries implement the real L3 CBLAS interface (`include/cblas.h`), as well as MuBLIS's general driver and mirrors of CBLAS routines (`include/mublis.h`).
+
+To build a BLAS library for a system optimized for out of the box by MuBLIS (check `config/`), run `make CONFIG={config name}`.  The `reference` config is generic and should be supported by all platforms.
+
+To build a BLAS library for systems not supported out of the box, a new config and possibly new targets must be created.
+
+A target contains the code MuBLIS needs to specialize to a hardware property (such as a specific microarchitecture or vector instruction extension set.)  A config contains the code needed by MuBLIS to select a specialized target to dispatch to at runtime.  The separation is useful because it allows users to build "fat binaries" optimizing for several hardware platforms at once.  For example, users may create targets for Zen 3, Haswell, generic CPUs supporting AVX2 (already provided by MuBLIS), and generic CPUs not supporting vector extensions.  Then, users may create a single Linux x86 config containing code that detects the hardware platform at runtime and selects the most appropriate target, thus simultaneously targeting Zen 3, Haswell, AVX2 capable CPUs, and old x86 CPUs.
+
+New hardware targets should be created and registered in `targets/`.  MuBLIS defines the interface all targets must fulfill in `include/mublis_instantiate.h`.  Generally, targets should contain micro-kernel implementations, a context object, and hardware-specific build rules if necessary.  More detailed information in `targets/README.md`.
+
+New configs should be created in `config/`.  MuBLIS defines the interface all configs must fulfill in `include/mublis_instantiate.h`.  Generally, configs contain a function definition MuBLIS uses to dispatch to specialized hardware targets at runtime, and config-specific build rules.  MuBLIS's build system automatically discovers new configs.  More information in `config/README.md`.
+
+MuBLIS provides some non-comprehensive correctness tests in `test/correctness`, and a small benchmarking tool in `test/performance`.
+
+### Repository Layout
+- `include/` - Public headers for L3 CBLAS API, MuBLIS API, and library instantiation interfaces
+- 'frame/ - Hardware-independent implementation of the BLIS framework
+  - `frame/base/` - Shared runtime infrastructure, including a pool allocator for MuBLIS's repeated large, fix sized, aligned memory allocations and helpers for runtime dispatch
+  - `frame/l1m/` - Matrix-packing operations used by L3 operations (note that non-packing L1 BLAS operations aren't implemented)
+  - `frame/l3/` - General L3 driver, MuBLIS mirrors of real L3 CBLAS operations
+  - `frame/compat` - MuBLIS wrappers for compatibility with CBLAS
+  - `frame/include/` - MuBLIS internal headers
+- `targets/` - Hardware specialization code (micro-kernels, block sizes, contexts, compiler flags)
+- `config/` - Build configurations
+- `make/`
+- `test`
+  - `test/correctness/` - Correctness tests for CBLAS interface
+  - `test/performance/` - Performance benchmarking tools
+  
