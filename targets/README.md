@@ -17,15 +17,15 @@ The context object should include:
   - Lower-triangular fused GEMM-TRSM
   - Upper-triangular fused GEMM-TRSM
 - Register block sizes:
-  - S_MR - rows per single precision A micro-panel
-  - S_NR - columns per single precision B micro-panel
-  - D_MR - rows per double precision A micro-panel
-  - D_NR - columns per double precision B micro-panel
+  - `S_MR` - rows per single precision A micro-panel
+  - `S_NR` - columns per single precision B micro-panel
+  - `D_MR` - rows per double precision A micro-panel
+  - `D_NR` - columns per double precision B micro-panel
 - Cache block sizes (see `mublis_scontext_t` in `include/mublis_instantiate.h` for divisibility requirements):
-  - S_MC - rows per single precision A panel
-  - S_NC - columns per single precision B panel
-  - D_MC - rows per double precision A panel
-  - D_NC - columns per double precision B panel
+  - `S_MC` - rows per single precision A panel
+  - `S_NC` - columns per single precision B panel
+  - `D_MC` - rows per double precision A panel
+  - `D_NC` - columns per double precision B panel
 
 See headers for micro-kernel functions in `include/mublis_instantiate.h`.  MuBLIS supports implementing micro-kernels in assembly.  If you choose to do so, C function headers may be easily created using the `MUBLIS_GEMM_UKR_PROT_STAMP` and `MUBLIS_GEMMTRSM_UKR_PROT_STAMP` macros in `include/mublis_instantiate.h`.
 
