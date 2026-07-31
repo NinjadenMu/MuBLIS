@@ -80,5 +80,5 @@ MuBLIS provides some non-comprehensive correctness tests in `test/correctness`, 
 - `config/` - Build configurations
 - `make/`
 - `test/`
-  - `test/correctness/` - Correctness tests for CBLAS interface
+  - `test/correctness/` - Basic correctness tests for CBLAS interface
   - `test/performance/` - Performance benchmarking tools
