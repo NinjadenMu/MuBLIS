@@ -120,8 +120,8 @@ static int first_update_pc(
     int kc = context->context_field.kc;                                        \
     int nc = context->context_field.nc;                                        \
                                                                                \
-    int triangular_block = side == MUBLIS_LEFT ? mc : nc;                      \
-    int kc_limit = MIN(kc, triangular_block / 4);                              \
+    int triangular_extent = MIN(k, side == MUBLIS_LEFT ? mc : nc);             \
+    int kc_limit = MIN(kc, triangular_extent / 4);                             \
     int kc_granularity = side == MUBLIS_LEFT ? mr : nr;                        \
     kc_limit -= kc_limit % kc_granularity;                                     \
     if (kc_limit > 0)                                                          \
@@ -135,10 +135,10 @@ static int first_update_pc(
     ctype *b_pack_buf = pool_block.b_pack_buf;                                 \
     ctype *c_buf = pool_block.c_buf;                                           \
                                                                                \
-    if (alpha == (ctype)0) {                                                   \
+    if (alpha == 0) {                                                          \
       for (int j = 0; j < n; j++)                                              \
         for (int i = 0; i < m; i++)                                            \
-          b[i * rs_b + j * cs_b] = (ctype)0;                                   \
+          b[i * rs_b + j * cs_b] = 0;                                          \
                                                                                \
       goto exit;                                                               \
     }                                                                          \
@@ -232,7 +232,7 @@ static int first_update_pc(
                   alpha,                                                       \
                   &a_pack_buf[(ir - ic) * (p_max - pc)],                       \
                   &b_pack_buf[(jr - jc) * (p_max - pc)],                       \
-                  first_update ? (ctype)0 : (ctype)1,                          \
+                  first_update ? 0 : 1,                                        \
                   &b[ir * rs_b + jr * cs_b],                                   \
                   rs_b, cs_b,                                                  \
                   &aux                                                         \
@@ -244,7 +244,7 @@ static int first_update_pc(
                   alpha,                                                       \
                   &a_pack_buf[(ir - ic) * (p_max - pc)],                       \
                   &b_pack_buf[(jr - jc) * (p_max - pc)],                       \
-                  (ctype)0,                                                    \
+                  0,                                                           \
                   c_buf,                                                       \
                   1, mr,                                                       \
                   &aux                                                         \
