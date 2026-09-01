@@ -1,5 +1,5 @@
 ### What's MuBLIS?
-MuBLIS is a fast thread-safe library for optimized linear algebra routines, and a framework that makes building new specialized linear algebra libraries easier (more on that in the next paragraphs).
+MuBLIS is a framework for building fast, thread-safe, and hardware-optimized linear algebra libraries.  Its included ARM NEON and AVX2 micro-kernels help it match single-threaded OpenBLAS on 5 of 6 single-threaded L3 real BLAS operations out of the box on supported hardware, and MuBLIS can be easily extended to entirely new hardware in ~200 lines of code.
 
 More software than ever can benefit from high performance implementations of linear algebra routines (think machine learning).  Because optimizing linear algebra routines is hard and highly dependent on hardware, software like NumPy and PyTorch usually link against BLAS (basic linear algebra subroutines) libraries provided by hardware vendors like Nvidia (cuBLAS) and Intel (MKL).
 
@@ -11,7 +11,7 @@ It then serves as two libraries in one.  Its primary purpose is helping users qu
 
 MuBLIS does not sacrifice performance for its generality.  With this repo's included NEON micro-kernels, MuBLIS can instantiate a BLAS library that slightly outperforms OpenBLAS (a highly optimized and popular BLAS implementation) built for my Apple Silicon machine, reaching ~80% peak FLOPs for single-threaded general matrix multiply.  When instantiated with an AVX2 micro-kernel, it achieves strong performance on several x86 CPUs, including the Intel Xeon Gold 6248R, AMD Ryzen 7 7700x, and the Intel i5-7500.  
 
-The usefulness of being able to easily create hardware-specialized libraries is also demonstrated by the fact that specialized libraries instantiated with MuBLIS consistently achieve ~20x speedups over reasonably optimized generic baseline implementations that use cache tiling.
+The usefulness of being able to easily create hardware-specialized libraries is also demonstrated by the fact that specialized libraries instantiated with MuBLIS consistently achieve **~20x** speedups over reasonably optimized generic baseline implementations that use cache tiling.
 
 MuBLIS can also be used to produce "fat binaries" at compile-time which support entire families of hardware, only specializing to a specific hardware target at run-time.
 
@@ -66,6 +66,7 @@ New hardware targets should be created and registered in `targets/`.  MuBLIS def
 
 New configs should be created in `config/`.  MuBLIS defines the interface all configs must fulfill in `include/mublis_instantiate.h`.  Generally, configs contain a function definition MuBLIS uses to dispatch to specialized hardware targets at runtime, and config-specific build rules.  MuBLIS's build system automatically discovers new configs.  More information in `config/README.md`.
 
+### Testing
 MuBLIS provides some non-comprehensive correctness tests in `test/correctness`, and a small benchmarking tool in `test/performance`.
 
 ### Repository Layout
